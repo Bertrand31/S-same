@@ -1,67 +1,26 @@
 package sesame
 
-import javax.sound.sampled._
-import java.io._
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success, Try}
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+import scala.util.Failure
+import scala.util.Success
+import cats.implicits._
+import cats.effect._
 
-final case class RecorderHandle(private val line: TargetDataLine) {
+object Sesame extends IOApp:
 
-  /** Closes the target data line to finish capturing and recording
-    */
-  def finish(): Unit =
-    line.stop()
-    line.close()
-    println("====> Finished")
-}
+  private val db = Storage.setup()
+  // db.store
 
-object JavaSoundRecorder {
-
-  private val wavFile = new File("./foo.wav")
-  private val fileType = AudioFileFormat.Type.WAVE
-  private var line: TargetDataLine = null
-
-  /** Defines an audio format
-    */
-  private val audioFormat =
-    val sampleRate = 16000F
-    val sampleSizeInBits = 8
-    val channels = 2
-    val signed = true
-    val bigEndian = true
-    new AudioFormat(sampleRate, sampleSizeInBits, channels, signed, bigEndian)
-
-  def start(): RecorderHandle =
-    line = AudioSystem.getTargetDataLine(audioFormat)
-    Future { // Fire and forget
-      Try {
-        line.open(audioFormat)
-        line.start() // Start capturing
-
-        println("Start capturing...")
-        val ais = new AudioInputStream(line)
-        println("Start recording...")
-        AudioSystem.write(ais, fileType, wavFile) // start recording
-      } match {
-        case Failure(ex: LineUnavailableException) => ex.printStackTrace()
-        case Failure(ioe: IOException) => ioe.printStackTrace()
-        case _ =>
-      }
+  def run(args: List[String]): IO[ExitCode] =
+    SoundRecorder.record().match {
+      case Failure(err) => IO.raiseError(err)
+      case Success(values) =>
+        val footprint = SoundFootprintGenerator.transform(values)
+        db.storeSong(footprint, "Whatev") *>
+        db.lookupHash(footprint.head) >>= (
+          _ match {
+            case Some(foo) => IO.println(s"Success!!: $foo").as(ExitCode.Success)
+            case None => IO.raiseError(new Error("Not found")).as(ExitCode.Error)
+          }
+        )
     }
-    RecorderHandle(line)
-}
-
-object Sesame extends App:
-
-  // Recording duration, in milliseconds
-  private val RecordingTime = 10_000 // 10 secondes
-
-  // Start recording
-  private val handle = JavaSoundRecorder.start()
-
-  Thread.sleep(RecordingTime)
-  handle.finish()
 

@@ -8,5 +8,9 @@ lazy val root = project
 
     scalaVersion := scala3Version,
 
-    libraryDependencies += "org.scalameta" %% "munit" % "0.7.29" % Test
+    libraryDependencies += "org.typelevel" %% "cats-core" % "2.7.0",
+    libraryDependencies += "org.typelevel" %% "cats-effect" % "3.3.14",
+    libraryDependencies += "org.scalameta" %% "munit" % "0.7.29" % Test,
+    libraryDependencies += "org.apache.commons" % "commons-math3" % "3.6.1",
+    libraryDependencies += "org.rocksdb" % "rocksdbjni" % "7.3.1"
   )
