@@ -26,7 +26,7 @@ object Storage:
 
   private val dbFolder: File = new File("./rocksdb")
 
-  def setup(): StorageHandle =
+  def setup: IO[StorageHandle] =
     val col1Name = "col1".getBytes(UTF_8)
     val col2Name = "col2".getBytes(UTF_8)
     val cfHandles = new ArrayList[ColumnFamilyHandle]()
@@ -34,16 +34,17 @@ object Storage:
       new DBOptions()
         .setCreateIfMissing(true)
         .setCreateMissingColumnFamilies(true)
-    val db = RocksDB.open(
-      opt,
-      dbFolder.getAbsolutePath(),
-      Arrays.asList(
-        new ColumnFamilyDescriptor(RocksDB.DEFAULT_COLUMN_FAMILY),
-        new ColumnFamilyDescriptor(col1Name),
-        new ColumnFamilyDescriptor(col2Name),
-      ),
-      cfHandles,
-    )
-    StorageHandle(db)
+    IO {
+      RocksDB.open(
+        opt,
+        dbFolder.getAbsolutePath(),
+        Arrays.asList(
+          new ColumnFamilyDescriptor(RocksDB.DEFAULT_COLUMN_FAMILY),
+          new ColumnFamilyDescriptor(col1Name),
+          new ColumnFamilyDescriptor(col2Name),
+        ),
+        cfHandles,
+      )
+    }.map(StorageHandle(_))
 
 

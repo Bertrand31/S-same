@@ -24,13 +24,13 @@ object SoundRecorder:
       microphone.open(audioFormat)
       var bytesRead = 0
       var numBytesRead = 0
-      val CHUNK_SIZE = 1024
+      val ChunkSize = 1024
       val data = new Array[Byte](microphone.getBufferSize() / 5)
 
       microphone.start() // Start capturing
 
       while (bytesRead < 200000) {
-        numBytesRead = microphone.read(data, 0, CHUNK_SIZE)
+        numBytesRead = microphone.read(data, 0, ChunkSize)
         bytesRead += numBytesRead
         // write the mic data to a stream for later use
         out.write(data, 0, numBytesRead)
