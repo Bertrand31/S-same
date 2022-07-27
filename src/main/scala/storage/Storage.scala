@@ -1,8 +1,8 @@
 package sesame
 
-import java.nio.ByteBuffer
 import java.util._
 import java.io.File
+import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets.UTF_8
 import scala.math.BigInt
 import cats.implicits._

@@ -20,14 +20,12 @@ object MicRecorder:
       val out = new ByteArrayOutputStream()
       microphone.open(audioFormat)
       var bytesRead = 0
-      var numBytesRead = 0
       val data = new Array[Byte](microphone.getBufferSize() / 5)
-      println(data.size)
 
       microphone.start() // Start capturing
 
-      while (bytesRead < 1000000) {
-        numBytesRead = microphone.read(data, 0, data.size)
+      while (bytesRead < 1_000_000) {
+        val numBytesRead = microphone.read(data, 0, data.size)
         bytesRead += numBytesRead
         // Write the mic data to a stream for later use
         out.write(data, 0, numBytesRead)

@@ -7,7 +7,7 @@ object SoundFootprintGenerator:
 
   private def toFourier(audio: Array[Byte]): Array[Array[Complex]] =
     val totalSize = audio.size
-    val ChunkSize = 1024
+    val ChunkSize = 4096
     val amountPossible = totalSize / ChunkSize
 
     val transformer = new FastFourierTransformer(DftNormalization.STANDARD)
@@ -17,7 +17,7 @@ object SoundFootprintGenerator:
       val complex: Array[Complex] = new Array[Complex](ChunkSize)
       for (i <- 0 until ChunkSize) {
         // Put the time domain data into a complex number with imaginary part as 0:
-        complex.update(i, new Complex(audio((times * ChunkSize) + i), 0))
+        complex.update(i, new Complex(audio(times * ChunkSize + i), 0))
       }
       // Perform FFT analysis on the chunk:
       results.update(times, transformer.transform(complex, TransformType.FORWARD))
