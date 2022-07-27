@@ -7,11 +7,11 @@ import cats.effect._
 object MicRecorder:
 
   private val audioFormat =
-    val sampleRate = 8000.0F
+    val sampleRate = 44100F
     val sampleSizeInBits = 16
     val channels = 1
     val signed = true
-    val bigEndian = true
+    val bigEndian = false
     AudioFormat(sampleRate, sampleSizeInBits, channels, signed, bigEndian)
 
   def record: IO[Array[Byte]] =
@@ -21,15 +21,15 @@ object MicRecorder:
       microphone.open(audioFormat)
       var bytesRead = 0
       var numBytesRead = 0
-      val ChunkSize = 1024
       val data = new Array[Byte](microphone.getBufferSize() / 5)
+      println(data.size)
 
       microphone.start() // Start capturing
 
-      while (bytesRead < 200000) {
-        numBytesRead = microphone.read(data, 0, ChunkSize)
+      while (bytesRead < 1000000) {
+        numBytesRead = microphone.read(data, 0, data.size)
         bytesRead += numBytesRead
-        // write the mic data to a stream for later use
+        // Write the mic data to a stream for later use
         out.write(data, 0, numBytesRead)
       }
       out.close()

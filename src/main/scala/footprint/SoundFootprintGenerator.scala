@@ -7,18 +7,17 @@ object SoundFootprintGenerator:
 
   private def toFourier(audio: Array[Byte]): Array[Array[Complex]] =
     val totalSize = audio.size
-    val CHUNK_SIZE = 1024
-    val amountPossible = totalSize / CHUNK_SIZE
+    val ChunkSize = 1024
+    val amountPossible = totalSize / ChunkSize
 
-    val dftNormalization = DftNormalization.STANDARD
-    val transformer = new FastFourierTransformer(dftNormalization)
+    val transformer = new FastFourierTransformer(DftNormalization.STANDARD)
 
-    val results: Array[Array[Complex]] = new Array[Array[Complex]](amountPossible)
+    val results = new Array[Array[Complex]](amountPossible)
     for (times <- 0 until amountPossible) {
-      val complex: Array[Complex] = new Array[Complex](CHUNK_SIZE)
-      for (i <- 0 until CHUNK_SIZE) {
+      val complex: Array[Complex] = new Array[Complex](ChunkSize)
+      for (i <- 0 until ChunkSize) {
         // Put the time domain data into a complex number with imaginary part as 0:
-        complex.update(i, new Complex(audio((times * CHUNK_SIZE) + i), 0))
+        complex.update(i, new Complex(audio((times * ChunkSize) + i), 0))
       }
       // Perform FFT analysis on the chunk:
       results.update(times, transformer.transform(complex, TransformType.FORWARD))
@@ -44,7 +43,7 @@ object SoundFootprintGenerator:
     i
   }
 
-  private def selectKeyPoints(results: Array[Array[Complex]]): Array[Long] =
+  private def hashKeyPoints(results: Array[Array[Complex]]): Array[Long] =
     results.map(row => {
       val highscores = new Array[Double](Range.size)
       val recordPoints = new Array[Long](Range.size)
@@ -64,4 +63,4 @@ object SoundFootprintGenerator:
 
 
   def transform: Array[Byte] => Array[Long] =
-    toFourier andThen selectKeyPoints
+    toFourier andThen hashKeyPoints

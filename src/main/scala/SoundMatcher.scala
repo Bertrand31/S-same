@@ -15,11 +15,13 @@ object Sesame extends IOApp:
         _
           .flatten
           .groupMapReduce(identity)(_ => 1)(_ + _)
+          .toList
+          .sortBy(_._2)
+          .reverse
           .map(tpl =>
             val percentage = tpl._2 * 100 / footprint.size
             s"'${tpl._1}' got a $percentage% match"
           )
-          .toList
       )
 
   def run(args: List[String]): IO[ExitCode] =

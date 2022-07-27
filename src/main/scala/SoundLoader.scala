@@ -9,11 +9,12 @@ object SoundLoader extends IOApp:
   private val InputSongsDirectory = new File("./data")
 
   private def processAndStoreSong(audioFile: File)(implicit db: StorageHandle): IO[Unit] =
-    WavLoader.wavToByteArray(audioFile).flatMap(byteArray =>
-      val footprint = SoundFootprintGenerator.transform(byteArray)
-      val songName = audioFile.getName().split('.').init.mkString("")
-      db.storeSong(footprint, songName)
-    )
+    for {
+      byteArray <- WavLoader.wavToByteArray(audioFile)
+      footprint  = SoundFootprintGenerator.transform(byteArray)
+      songName   = audioFile.getName().split('.').init.mkString("")
+      _         <- db.storeSong(footprint, songName)
+    } yield ()
 
   def run(args: List[String]): IO[ExitCode] =
     for {
