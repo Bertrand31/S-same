@@ -5,7 +5,7 @@ import org.apache.commons.math3.transform.{DftNormalization, FastFourierTransfor
 
 object SoundFootprintGenerator:
 
-  def toFourier(audio: Array[Byte]): Array[Array[Complex]] =
+  private def toFourier(audio: Array[Byte]): Array[Array[Complex]] =
     val totalSize = audio.size
     val CHUNK_SIZE = 1024
     val amountPossible = totalSize / CHUNK_SIZE

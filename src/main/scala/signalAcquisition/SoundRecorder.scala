@@ -2,12 +2,9 @@ package sesame
 
 import javax.sound.sampled.{AudioFormat, AudioFileFormat, AudioSystem}
 import java.io.{ByteArrayOutputStream, File}
-import scala.util.Try
+import cats.effect._
 
-object SoundRecorder:
-
-  private val wavFile = new File("./foo.wav")
-  private val fileType = AudioFileFormat.Type.WAVE
+object MicRecorder:
 
   private val audioFormat =
     val sampleRate = 8000.0F
@@ -17,8 +14,8 @@ object SoundRecorder:
     val bigEndian = true
     AudioFormat(sampleRate, sampleSizeInBits, channels, signed, bigEndian)
 
-  def record(): Try[Array[Byte]] =
-    Try {
+  def record: IO[Array[Byte]] =
+    IO {
       val microphone = AudioSystem.getTargetDataLine(audioFormat)
       val out = new ByteArrayOutputStream()
       microphone.open(audioFormat)
@@ -38,5 +35,7 @@ object SoundRecorder:
       out.close()
       microphone.stop()
       microphone.close()
-      out.toByteArray()
+      val byteArray = out.toByteArray()
+      println(s"Mic recording length: ${byteArray.size}")
+      byteArray
     }

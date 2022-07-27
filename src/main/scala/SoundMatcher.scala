@@ -23,16 +23,16 @@ object Sesame extends IOApp:
       )
 
   def run(args: List[String]): IO[ExitCode] =
-    Storage.setup.flatMap(implicit db => {
-      SoundRecorder.record() match {
-        case Failure(err) => IO.raiseError(err)
-        case Success(values) =>
-          val footprint = SoundFootprintGenerator.transform(values)
-          db.storeSong(footprint, "Jay-Z - Can I live") *>
-          lookupFootprint(footprint).flatMap({
-            case Nil     => IO.println("NO MATCH FOUND")
-            case results => IO.println(s"\nFOUND:\n${results.mkString("\n")}\n================\n")
-          }).as(ExitCode.Success)
-      }
-    })
+    for {
+      db       <- Storage.setup
+      values   <- MicRecorder.record
+      footprint = SoundFootprintGenerator.transform(values)
+      _ = println("Recorded:")
+      _ = println(footprint.toList)
+      results  <- lookupFootprint(footprint)(db)
+      _        <- results match {
+                    case Nil     => IO.println("NO MATCH FOUND")
+                    case results => IO.println(s"\nFOUND:\n${results.mkString("\n")}\n=========\n")
+                  }
+    } yield ExitCode.Success
 
