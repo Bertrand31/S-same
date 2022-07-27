@@ -1,7 +1,7 @@
 package sesame
 
-import javax.sound.sampled.{AudioFormat, AudioFileFormat, AudioSystem}
 import java.io.{ByteArrayOutputStream, File}
+import javax.sound.sampled.{AudioFormat, AudioFileFormat, AudioSystem}
 import cats.effect._
 
 object MicRecorder:
@@ -35,7 +35,5 @@ object MicRecorder:
       out.close()
       microphone.stop()
       microphone.close()
-      val byteArray = out.toByteArray()
-      println(s"Mic recording length: ${byteArray.size}")
-      byteArray
+      out.toByteArray()
     }

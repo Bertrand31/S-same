@@ -27,8 +27,6 @@ object Sesame extends IOApp:
       db       <- Storage.setup
       values   <- MicRecorder.record
       footprint = SoundFootprintGenerator.transform(values)
-      _ = println("Recorded:")
-      _ = println(footprint.toList)
       results  <- lookupFootprint(footprint)(db)
       _        <- results match {
                     case Nil     => IO.println("NO MATCH FOUND")
