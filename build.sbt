@@ -7,9 +7,12 @@ scalaVersion := "3.1.3"
 libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-core" % "2.7.0",
   "org.typelevel" %% "cats-effect" % "3.3.14",
-  "org.scalameta" %% "munit" % "0.7.29" % Test,
   "org.apache.commons" % "commons-math3" % "3.6.1",
-  "org.rocksdb" % "rocksdbjni" % "7.3.1"
+  "org.rocksdb" % "rocksdbjni" % "7.3.1",
+
+  // Tests
+  "org.scalactic" %% "scalactic" % "3.2.13",
+  "org.scalatest" %% "scalatest" % "3.2.13" % "test",
 )
 
 scalacOptions ++= Seq(

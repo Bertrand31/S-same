@@ -14,9 +14,8 @@ final case class StorageHandle(private val db: RocksDB) {
   def storeSong(footprint: Array[Long], songName: String): IO[Unit] =
     footprint
       .toList
-      .foldMap(hash => IO { db.put(BigInt(hash).toByteArray, songName.getBytes(UTF_8)) }) >>
-    IO.println(s"$songName was ingested")
-
+      .traverse_(hash => IO { db.put(BigInt(hash).toByteArray, songName.getBytes(UTF_8)) }) >>
+    IO.println(s"$songName was stored successfuly")
 
   def lookupHash(hash: Long): IO[Option[String]] =
     IO {

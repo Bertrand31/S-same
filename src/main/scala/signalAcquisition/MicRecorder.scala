@@ -24,12 +24,13 @@ object MicRecorder:
 
       microphone.start() // Start capturing
 
-      while (bytesRead < 1_000_000) {
+      while bytesRead < 1_000_000
+      do
         val numBytesRead = microphone.read(data, 0, data.size)
         bytesRead += numBytesRead
         // Write the mic data to a stream for later use
         out.write(data, 0, numBytesRead)
-      }
+
       out.close()
       microphone.stop()
       microphone.close()

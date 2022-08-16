@@ -20,5 +20,5 @@ object SoundLoader extends IOApp:
     for {
       given StorageHandle <- Storage.setup
       audioFiles          <- FileUtils.getFilesIn(InputSongsDirectory)
-      _                   <- audioFiles.traverse(processAndStoreSong)
+      _                   <- audioFiles.traverse_(processAndStoreSong)
     } yield ExitCode.Success

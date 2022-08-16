@@ -15,10 +15,10 @@ object SoundFootprintGenerator:
     (0 until amountPossible).map(times =>
       val complex =
         (0 until ChunkSize)
-          // Put the time domain data into a complex number with imaginary part as 0:
+          // Put the time domain data into a complex number with imaginary part as 0
           .map(i => new Complex(audio(times * ChunkSize + i), 0))
           .toArray
-      // Perform FFT analysis on the chunk:
+      // Perform FFT analysis on the chunk
       transformer.transform(complex, TransformType.FORWARD)
     ).toArray
 
@@ -44,15 +44,16 @@ object SoundFootprintGenerator:
       (LowerLimit until (UpperLimit - 1)).foreach(freq =>
         // Get the magnitude:
         val mag = math.log(row(freq).abs + 1)
-        // Find out which range we are in:
+        // Find out which range we are in
         val index = getIndex(freq)
-        // Save the highest magnitude and corresponding frequency:
+        // Save the highest magnitude and corresponding frequency
         if (mag > highscores(index)) {
           highscores.update(index, mag)
           recordPoints.update(index, freq)
         }
       )
-      hash(recordPoints(0), recordPoints(1), recordPoints(2), recordPoints(3))
+      // DEVIATION: discard first point
+      hash(recordPoints(1), recordPoints(2), recordPoints(3), recordPoints(4))
     )
 
 
