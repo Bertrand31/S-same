@@ -28,7 +28,6 @@ javaOptions ++= Seq(
   "-XX:+CMSClassUnloadingEnabled", // Enable class unloading under the CMS GC
   "-Xms10g",
   "-Xmx14g",
-  // "-XX:+UseParNewGC",
 )
 
 // Test suite settings

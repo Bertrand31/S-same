@@ -8,19 +8,16 @@ object SoundFootprintGenerator:
   private val transformer = new FastFourierTransformer(DftNormalization.STANDARD)
   private val ChunkSize = 4096
 
-  private def toFourier(audio: Array[Byte]): Array[Array[Complex]] =
+  private def toFourier(audio: Array[Byte]): LazyList[Array[Complex]] =
     val totalSize = audio.size
     val amountPossible = totalSize / ChunkSize
 
-    (0 until amountPossible).map(times =>
-      val complex =
-        (0 until ChunkSize)
-          // Put the time domain data into a complex number with imaginary part as 0
-          .map(i => new Complex(audio(times * ChunkSize + i), 0))
-          .toArray
-      // Perform FFT analysis on the chunk
-      transformer.transform(complex, TransformType.FORWARD)
-    ).toArray
+    audio
+      .sliding(ChunkSize, ChunkSize)
+      .to(LazyList)
+      .init // The last chunk might be shorter than ChunkSize - we discard it
+      .map(_.map(Complex(_, 0))) // Time domain data into a complex number with imaginary part as 0
+      .map(transformer.transform(_, TransformType.FORWARD)) // Perform FFT analysis on the chunk
 
   private val LowerLimit = 40
   private val UpperLimit = 300
@@ -37,7 +34,7 @@ object SoundFootprintGenerator:
   private def getIndex(freq: Int): Int =
     Range.indexWhere(_ >= freq)
 
-  private def hashKeyPoints(results: Array[Array[Complex]]): Array[Long] =
+  private def hashKeyPoints(results: LazyList[Array[Complex]]): Array[Long] =
     results.map(row =>
       val highscores = new Array[Double](Range.size)
       val recordPoints = new Array[Long](Range.size)
@@ -54,7 +51,7 @@ object SoundFootprintGenerator:
       )
       // DEVIATION: discard first point
       hash(recordPoints(1), recordPoints(2), recordPoints(3), recordPoints(4))
-    )
+    ).toArray
 
 
   def transform: Array[Byte] => Array[Long] =

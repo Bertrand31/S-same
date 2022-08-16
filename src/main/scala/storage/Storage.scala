@@ -7,15 +7,14 @@ import java.nio.charset.StandardCharsets.UTF_8
 import scala.math.BigInt
 import cats.implicits._
 import cats.effect._
-import org.rocksdb._
+import org.rocksdb.{ColumnFamilyDescriptor, ColumnFamilyHandle, DBOptions, RocksDB}
 
 final case class StorageHandle(private val db: RocksDB) {
 
   def storeSong(footprint: Array[Long], songName: String): IO[Unit] =
     footprint
       .toList
-      .traverse_(hash => IO { db.put(BigInt(hash).toByteArray, songName.getBytes(UTF_8)) }) >>
-    IO.println(s"$songName was stored successfuly")
+      .traverse_(hash => IO { db.put(BigInt(hash).toByteArray, songName.getBytes(UTF_8)) })
 
   def lookupHash(hash: Long): IO[Option[String]] =
     IO {
@@ -28,8 +27,6 @@ object Storage:
   private val dbFolder: File = new File("./rocksdb")
 
   def setup: IO[StorageHandle] =
-    val col1Name = "col1".getBytes(UTF_8)
-    val col2Name = "col2".getBytes(UTF_8)
     val cfHandles = new ArrayList[ColumnFamilyHandle]()
     val opt =
       new DBOptions()
@@ -39,11 +36,7 @@ object Storage:
       RocksDB.open(
         opt,
         dbFolder.getAbsolutePath(),
-        Arrays.asList(
-          new ColumnFamilyDescriptor(RocksDB.DEFAULT_COLUMN_FAMILY),
-          new ColumnFamilyDescriptor(col1Name),
-          new ColumnFamilyDescriptor(col2Name),
-        ),
+        Arrays.asList(new ColumnFamilyDescriptor(RocksDB.DEFAULT_COLUMN_FAMILY)),
         cfHandles,
       )
     }.map(StorageHandle(_))
