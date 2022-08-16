@@ -3,6 +3,7 @@ package sesame
 import javax.sound.sampled.AudioSystem
 import java.io.{ByteArrayOutputStream, File}
 import java.nio.file.{Files, Paths}
+import cats.implicits._
 import cats.effect._
 
 object WavLoader:
@@ -13,8 +14,8 @@ object WavLoader:
     val audioBytes = new Array[Byte](numBytes)
     var numBytesRead = 0
 
-    while (numBytesRead != -1) {
+    while (numBytesRead =!= -1) {
       numBytesRead = audioInputStream.read(audioBytes)
     }
-    audioBytes.reverse.dropWhile(_ == 0).reverse
+    audioBytes.reverse.dropWhile(_ === 0).reverse
   }
