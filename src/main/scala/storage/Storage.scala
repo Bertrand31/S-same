@@ -12,13 +12,22 @@ import org.rocksdb.{ColumnFamilyDescriptor, ColumnFamilyHandle, DBOptions, Rocks
 final case class StorageHandle(private val db: RocksDB) {
 
   def storeSong(footprint: ArraySeq[Long], songName: String): IO[Unit] =
-    footprint.traverse_(hash =>
-      IO { db.put(BigInt(hash).toByteArray, songName.getBytes(UTF_8)) }
-    )
+    footprint.zipWithIndex.traverse_({
+      case (hash, index) =>
+        val key = BigInt(hash).toByteArray
+        val sanitizedSongName = songName.replaceAll("@", " at ")
+        val value = s"$sanitizedSongName@$index".getBytes(UTF_8)
+        IO { db.put(key, value) }
+    })
 
-  def lookupHash(hash: Long): IO[Option[String]] =
+  def lookupHash(hash: Long): IO[Option[(String, Int)]] =
     IO {
-      Option(db.get(BigInt(hash).toByteArray)).map(new String(_, UTF_8))
+      Option(db.get(BigInt(hash).toByteArray))
+        .map(new String(_, UTF_8))
+        .map(str =>
+          val Array(songName, index) = str.split("@")
+          (songName, index.toInt)
+        )
     }
 }
 

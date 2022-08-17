@@ -7,22 +7,29 @@ import cats.effect._
 
 object Sesame extends IOApp:
 
-  private def lookupFootprint(footprint: ArraySeq[Long])
-                             (using db: StorageHandle): IO[List[String]] =
+  private def getMatchingSongs(footprint: ArraySeq[Long])
+                              (using db: StorageHandle): IO[List[String]] =
     footprint
       .traverse(db.lookupHash)
-      .map(
-        _
-          .flatten
-          .groupMapReduce(identity)(_ => 1)(_ + _)
+      .map(responses =>
+        responses
+          .zipWithIndex
+          .collect({
+            case (Some((songName, songIndex)), footprintIndex) =>
+              (songName, songIndex - footprintIndex)
+          })
+          .groupMap(_._1)(_._2)
           .toList
-          .sortBy(_._2)
+          .sortBy(_._2.size)
           .reverse
-          .map(tpl =>
-            val percentage = tpl._2 * 100 / footprint.size.toFloat
-            val roundedPct = math.round(percentage * 100) / 100F
-            s"'${tpl._1}' got a $roundedPct% match"
-          )
+          .take(5)
+          .map({
+            case (songName, deltas) =>
+              val deltaHistogram = deltas.groupMapReduce(identity)(_ => 1)(_ + _)
+              val percentage = deltas.size * 100 / footprint.size.toFloat
+              val roundedPct = math.round(percentage * 100) / 100F
+              s"'$songName' got a $roundedPct% match. Linearity score: ${deltaHistogram.values.max}"
+          })
       )
 
   def run(args: List[String]): IO[ExitCode] =
@@ -30,7 +37,7 @@ object Sesame extends IOApp:
       given StorageHandle <- Storage.setup
       audioChunks         <- MicRecorder.recordChunks
       footprint            = SoundFootprintGenerator.transform(audioChunks)
-      results             <- lookupFootprint(footprint)
+      results             <- getMatchingSongs(footprint)
       _                   <- results match {
                                case Nil     => IO.println("NO MATCH FOUND")
                                case results => IO.println(s"\nFOUND:\n${results.mkString("\n")}\n")
