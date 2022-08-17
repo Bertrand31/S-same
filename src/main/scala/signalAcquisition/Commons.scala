@@ -1,12 +1,12 @@
 package sesame
 
-import java.io.{ByteArrayOutputStream, File}
-import javax.sound.sampled.{AudioFormat, AudioFileFormat, AudioSystem}
-import cats.effect._
+import javax.sound.sampled.AudioFormat
 
 object Commons:
 
-  val audioFormat =
+  val ChunkSize = 4096
+
+  val InputFormat =
     val sampleRate = 44100F
     val sampleSizeInBits = 16
     val channels = 1

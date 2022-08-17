@@ -1,26 +1,24 @@
 package sesame
 
-import java.io.{ByteArrayOutputStream, File}
-import java.nio.file.{Files, Paths}
-import javax.sound.sampled.{AudioFormat, AudioSystem}
-import cats.implicits._
+import java.io.File
+import javax.sound.sampled.AudioSystem
 import cats.effect.IO
 
 object WavLoader:
 
-  def wavToByteArray(wavFile: File): IO[Array[Byte]] =
+  def wavToByteChunks(wavFile: File): IO[Iterator[Array[Byte]]] =
     IO { AudioSystem.getAudioFileFormat(wavFile) }.flatMap({
-      case fileFormat if fileFormat.getFormat matches Commons.audioFormat =>
+      case fileFormat if fileFormat.getFormat matches Commons.InputFormat =>
         IO.blocking {
           val audioInputStream = AudioSystem.getAudioInputStream(wavFile)
-          val audioBytes = new Array[Byte](fileFormat.getByteLength())
-          var numBytesRead = 0
+          val bytesNumber = fileFormat.getByteLength()
 
-          while numBytesRead =!= -1
-          do numBytesRead = audioInputStream.read(audioBytes)
-
-          audioBytes.dropWhile(_ === 0).reverse.dropWhile(_ === 0).reverse
+          Iterator.fill(bytesNumber / Commons.ChunkSize) {
+            val chunk = new Array[Byte](Commons.ChunkSize)
+            audioInputStream.read(chunk, 0, Commons.ChunkSize)
+            chunk
+          }
         }
       case fileFormat =>
-        IO.raiseError(AudioFormatException(s"$fileFormat did not match ${Commons.audioFormat}"))
+        IO.raiseError(AudioFormatException(s"$fileFormat did not match ${Commons.InputFormat}"))
     })

@@ -1,15 +1,15 @@
 package sesame
 
 import scala.util.{Failure, Success}
+import scala.collection.immutable.ArraySeq
 import cats.implicits._
 import cats.effect._
 
 object Sesame extends IOApp:
 
-  private def lookupFootprint(footprint: Array[Long])
+  private def lookupFootprint(footprint: ArraySeq[Long])
                              (using db: StorageHandle): IO[List[String]] =
     footprint
-      .toList
       .traverse(db.lookupHash)
       .map(
         _
@@ -28,8 +28,8 @@ object Sesame extends IOApp:
   def run(args: List[String]): IO[ExitCode] =
     for {
       given StorageHandle <- Storage.setup
-      values              <- MicRecorder.record
-      footprint            = SoundFootprintGenerator.transform(values)
+      audioChunks         <- MicRecorder.recordChunks
+      footprint            = SoundFootprintGenerator.transform(audioChunks)
       results             <- lookupFootprint(footprint)
       _                   <- results match {
                                case Nil     => IO.println("NO MATCH FOUND")
