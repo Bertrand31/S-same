@@ -29,6 +29,9 @@ final case class StorageHandle(private val db: RocksDB) {
           (songName, index.toInt)
         )
     }
+
+  def release: IO[Unit] =
+    IO { db.close() }
 }
 
 object Storage:

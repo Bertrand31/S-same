@@ -4,15 +4,15 @@ import scala.util.{Failure, Success}
 import scala.collection.immutable.ArraySeq
 import cats.implicits._
 import cats.effect._
+import utils.MathUtils.round
 
-object Sesame extends IOApp:
+object Sésame extends IOApp:
 
-  private def getMatchingSongs(footprint: ArraySeq[Long])
-                              (using db: StorageHandle): IO[List[String]] =
+  def getMatchingSongs(footprint: ArraySeq[Long])(using db: StorageHandle): IO[List[String]] =
     footprint
       .traverse(db.lookupHash)
-      .map(responses =>
-        responses
+      .map(
+        _
           .zipWithIndex
           .collect({
             case (Some((songName, songIndex)), footprintIndex) =>
@@ -20,15 +20,21 @@ object Sesame extends IOApp:
           })
           .groupMap(_._1)(_._2)
           .toList
-          .sortBy(_._2.size)
-          .reverse
-          .take(5)
           .map({
             case (songName, deltas) =>
               val deltaHistogram = deltas.groupMapReduce(identity)(_ => 1)(_ + _)
-              val percentage = deltas.size * 100 / footprint.size.toFloat
-              val roundedPct = math.round(percentage * 100) / 100F
-              s"'$songName' got a $roundedPct% match. Linearity score: ${deltaHistogram.values.max}"
+              val matchPct = deltas.size * 100 / footprint.size.toFloat
+              val linearityPct = (deltaHistogram.values.max * 100) / footprint.size.toFloat
+              (songName, matchPct, linearityPct)
+          })
+          .sortBy(_._3)
+          .reverse
+          .take(5)
+          .map({
+            case (songName, matchPct, linearityPct) =>
+              s"==> $songName <==".padTo(30, '=') ++ "\n" ++
+              s"- Hashes matching at ${round(2, matchPct)}%\n" ++
+              s"- Linearity matching at: ${round(2, linearityPct)}%\n"
           })
       )
 

@@ -1,7 +1,9 @@
 package sesame
 
 import java.io.File
+import cats.implicits._
 import cats.effect._
+import utils.{SoundPlayback, FileUtils}
 
 object SoundLoader extends IOApp:
 
@@ -10,6 +12,7 @@ object SoundLoader extends IOApp:
   private def processAndStoreSong(audioFile: File)(using db: StorageHandle): IO[Unit] =
     for {
       audioChunks <- WavLoader.wavToByteChunks(audioFile)
+      // _           <- audioChunks.toList.traverse_(SoundPlayback.playWavByteArray)
       footprint    = SoundFootprintGenerator.transform(audioChunks)
       songName     = audioFile.getName().split('.').init.mkString("")
       _           <- db.storeSong(footprint, songName)

@@ -31,4 +31,4 @@ javaOptions ++= Seq(
 )
 
 // Test suite settings
-fork in Test := true
+Test / fork := true

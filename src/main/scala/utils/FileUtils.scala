@@ -1,4 +1,4 @@
-package sesame
+package sesame.utils
 
 import java.io.File
 import java.nio.file.{Files, Paths}
