@@ -4,7 +4,7 @@ import scala.util.{Failure, Success}
 import scala.collection.immutable.ArraySeq
 import cats.implicits._
 import cats.effect._
-import utils.MathUtils.round
+import utils.MathUtils.roundToTwoPlaces
 
 object Sésame extends IOApp:
 
@@ -33,8 +33,8 @@ object Sésame extends IOApp:
           .map({
             case (songName, matchPct, linearityPct) =>
               s"==> $songName <==".padTo(30, '=') ++ "\n" ++
-              s"- Hashes matching at ${round(2, matchPct)}%\n" ++
-              s"- Linearity matching at: ${round(2, linearityPct)}%\n"
+              s"- Hashes matching at ${roundToTwoPlaces(matchPct)}%\n" ++
+              s"- Linearity matching at: ${roundToTwoPlaces(linearityPct)}%\n"
           })
       )
 
