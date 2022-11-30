@@ -21,16 +21,16 @@ object SoundFootprintGenerator:
   private val FuzFactor = 2
 
   private def hash(p1: Long, p2: Long, p3: Long, p4: Long): Long =
-    (p4 - (p4 % FuzFactor)) * 100000000 +
-    (p3 - (p3 % FuzFactor)) * 100000 +
+    (p4 - (p4 % FuzFactor)) * 100_000_000 +
+    (p3 - (p3 % FuzFactor)) * 100_000 +
     (p2 - (p2 % FuzFactor)) * 100 +
     (p1 - (p1 % FuzFactor))
 
   private def getIndex(freq: Int): Int =
     Range.indexWhere(_ >= freq)
 
-  private def hashKeyPoints(results: Iterator[Array[Complex]]): ArraySeq[Long] =
-    results.map(row =>
+  private val hashKeyPoints: Iterator[Array[Complex]] => ArraySeq[Long] =
+    _.map(row =>
       val highscores = new Array[Double](Range.size)
       val recordPoints = new Array[Long](Range.size)
       (0 to (UpperLimit - 1)).foreach(freq =>
@@ -46,5 +46,5 @@ object SoundFootprintGenerator:
       hash(recordPoints(1), recordPoints(2), recordPoints(3), recordPoints(4))
     ).to(ArraySeq)
 
-  def transform: Iterator[Array[Byte]] => ArraySeq[Long] =
+  val transform: Iterator[Array[Byte]] => ArraySeq[Long] =
     toFourier andThen hashKeyPoints
