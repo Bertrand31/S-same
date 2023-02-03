@@ -17,12 +17,14 @@ class SoundFootprintGeneratorSpec extends AnyFlatSpec with should.Matchers:
 
     val resultsIO =
       for {
-        db          <- Storage.setup
+        dbs         <- Storage.setup
+        (footprintDB, metadataDB) = dbs
         audioChunks <- WavLoader.wavToByteChunks(audioFile)
         footprint    = SoundFootprintGenerator.transform(audioChunks)
-        _           <- db.storeSong(footprint, "foobar")
-        results     <- Sésame.getMatchingSongs(footprint)(using db)
-        _           <- db.release
+        _           <- footprintDB.storeSong(123456, footprint)
+        results     <- Sésame.getMatchingSongs(footprint)(using footprintDB)
+        _           <- footprintDB.release
+        _           <- metadataDB.release
       } yield results
 
     val expected = List("==> foobar <==================\n- Hashes matching at 100.0%\n- Linearity matching at: 99.44%\n")

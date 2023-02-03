@@ -18,13 +18,15 @@ class StorageSpec extends AnyFlatSpec with should.Matchers:
     val songName = "Test Song"
 
     val test = for {
-      dbHandle  <- Storage.setup
-      _         <- dbHandle.storeSong(hashes, songName)
+      dbs         <- Storage.setup
+      (footprintDB, metadataDB) = dbs
+      _         <- footprintDB.storeSong(123456, hashes)
       idxHashes  = hashes.zipWithIndex
-      matches   <- idxHashes.traverse({ case (hash, _) => dbHandle.lookupHash(hash) })
-      _         <- dbHandle.release
+      matches   <- idxHashes.traverse({ case (hash, _) => footprintDB.lookupHash(hash) })
+      _           <- footprintDB.release
+      _           <- metadataDB.release
     } yield idxHashes.zip(matches).foreach({
-      case ((_, idx), Some(s"$songName", matchIdx)) => idx shouldBe matchIdx
+      case ((_, idx), Some((matchIdx, _))) => idx shouldBe matchIdx
       case _ => throw new Error()
     })
 

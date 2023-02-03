@@ -2,13 +2,16 @@ name := "Sésame"
 
 version := "0.1"
 
-scalaVersion := "3.1.3"
+scalaVersion := "3.2.2"
 
 libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-core" % "2.7.0",
   "org.typelevel" %% "cats-effect" % "3.3.14",
   "org.apache.commons" % "commons-math3" % "3.6.1",
   "org.rocksdb" % "rocksdbjni" % "7.3.1",
+  "io.circe" %% "circe-core" % "0.15.0-M1",
+  "io.circe" %% "circe-parser" % "0.15.0-M1",
+  "org.lwjgl" % "lwjgl-xxhash" % "3.3.1",
 
   // Tests
   "org.scalactic" %% "scalactic" % "3.2.13",

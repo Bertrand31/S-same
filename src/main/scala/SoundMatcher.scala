@@ -8,7 +8,7 @@ import utils.MathUtils.roundToTwoPlaces
 
 object Sésame extends IOApp:
 
-  def getMatchingSongs(footprint: ArraySeq[Long])(using db: StorageHandle): IO[List[String]] =
+  def getMatchingSongs(footprint: ArraySeq[Long])(using db: FootprintsDB): IO[List[String]] =
     footprint
       .traverse(db.lookupHash)
       .map(
@@ -40,13 +40,16 @@ object Sésame extends IOApp:
 
   def run(args: List[String]): IO[ExitCode] =
     for {
-      given StorageHandle <- Storage.setup
-      audioChunks         <- MicRecorder.recordChunks
-      footprint            = SoundFootprintGenerator.transform(audioChunks)
-      results             <- getMatchingSongs(footprint)
-      _                   <- results match {
-                               case Nil     => IO.println("NO MATCH FOUND")
-                               case results => IO.println(s"\nFOUND:\n${results.mkString("\n")}\n")
-                             }
+      databaseHandles                        <- Storage.setup
+      (given FootprintsDB, given MetadataDB) =  databaseHandles
+      audioChunks                            <- MicRecorder.recordChunks
+      footprint                              =  SoundFootprintGenerator.transform(audioChunks)
+      results                                <- getMatchingSongs(footprint)
+      _                                      <- results match {
+                                                  case Nil     => IO.println("NO MATCH FOUND")
+                                                  case results =>
+                                                    IO.println("\nFOUND:\n") *>
+                                                    IO.println(results.mkString("\n") ++ "\n")
+                                                }
     } yield ExitCode.Success
 
