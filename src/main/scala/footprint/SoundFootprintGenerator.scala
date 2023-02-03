@@ -8,7 +8,7 @@ object SoundFootprintGenerator:
 
   private val transformer = new FastFourierTransformer(DftNormalization.STANDARD)
 
-  private val toFourier: Iterator[Array[Byte]] => Iterator[Array[Complex]] =
+  val toFourier: Iterator[Array[Byte]] => Iterator[Array[Complex]] =
     _
       .map(_.map(Complex(_, 0))) // Time domain data into a complex number with imaginary part as 0
       .map(transformer.transform(_, TransformType.FORWARD)) // Perform FFT analysis on the chunk
