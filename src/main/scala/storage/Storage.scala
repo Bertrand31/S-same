@@ -24,7 +24,7 @@ object StorageConstants {
   val FootprintBin = "slice-id"
 }
 
-final case class FootprintsDB(private val db: AerospikeClient) {
+final case class FootprintDB(private val db: AerospikeClient) {
 
   private val writePolicy = new WritePolicy()
   writePolicy.sendKey = true
@@ -64,7 +64,7 @@ final case class MetadataDB(private val db: AerospikeClient) {
     val bins = metadata.map({
       case (metaKey, metaVal) => Bin(metaKey, metaVal)
     }).toArray
-    IO { db.put(writePolicy, key, bins*) }
+    IO(db.put(writePolicy, key, bins*))
   }
 
   private val readPolicy = new Policy()
@@ -81,11 +81,11 @@ final case class MetadataDB(private val db: AerospikeClient) {
 
 object Storage:
 
-  def setup: IO[(FootprintsDB, MetadataDB)] =
+  def setup: IO[(FootprintDB, MetadataDB)] =
     IO {
       val client = new AerospikeClient("127.0.0.1", 3000)
       (
-        FootprintsDB(client),
+        FootprintDB(client),
         MetadataDB(client),
       )
     }

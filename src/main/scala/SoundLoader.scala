@@ -22,8 +22,8 @@ object SoundLoader extends IOApp:
     } yield ()
 
   private def processAndStoreSong(audioFile: File)(
-    using footprintsDB: FootprintsDB,
-    metadataDB: MetadataDB,
+      using footprintsDB: FootprintDB,
+      metadataDB: MetadataDB,
   ): IO[Unit] =
     for {
       audioChunks <- WavLoader.wavToByteChunks(audioFile)
@@ -37,9 +37,9 @@ object SoundLoader extends IOApp:
 
   def run(args: List[String]): IO[ExitCode] =
     for {
-      databaseHandles            <- Storage.setup
-      (given FootprintsDB, given MetadataDB) =  databaseHandles
-      audioFiles                 <- FileUtils.getFilesIn(InputSongsDirectory)
-      _                          <- IO.parTraverseN(5)(audioFiles)(processAndStoreSong)
-      // _                       <- audioFiles.traverse_(debug)
+      databaseHandles                       <- Storage.setup
+      (given FootprintDB, given MetadataDB) =  databaseHandles
+      audioFiles                            <- FileUtils.getFilesIn(InputSongsDirectory)
+      _                                     <- IO.parTraverseN(5)(audioFiles)(processAndStoreSong)
+      // _                                  <- audioFiles.traverse_(debug)
     } yield ExitCode.Success

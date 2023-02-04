@@ -8,48 +8,67 @@ import utils.MathUtils.roundToTwoPlaces
 
 object Sésame extends IOApp:
 
-  def getMatchingSongs(footprint: ArraySeq[Long])(using db: FootprintsDB): IO[List[String]] =
+  final case class SongMatch(
+    songId: Int,
+    songData: Map[String, String],
+    matchPercentage: Float,
+    linearityMatchPercentage: Float,
+  )
+
+  def getMatchingSongs(footprint: ArraySeq[Long])(
+      using footprintDB: FootprintDB,
+      metadataDB: MetadataDB,
+  ): IO[ArraySeq[SongMatch]] =
     footprint
-      .traverse(db.lookupHash)
-      .map(
+      .traverse(footprintDB.lookupHash)
+      .flatMap(
         _
           .zipWithIndex
           .collect({
-            case (Some((songName, songIndex)), footprintIndex) =>
-              (songName, songIndex - footprintIndex)
+            case (Some((songIndex, songId)), footprintIndex) =>
+              (songId, songIndex - footprintIndex)
           })
           .groupMap(_._1)(_._2)
-          .toList
+          .to(ArraySeq)
           .map({
-            case (songName, deltas) =>
+            case (songId, deltas) =>
               val deltaHistogram = deltas.groupMapReduce(identity)(_ => 1)(_ + _)
               val matchPct = deltas.size * 100 / footprint.size.toFloat
               val linearityPct = (deltaHistogram.values.max * 100) / footprint.size.toFloat
-              (songName, matchPct, linearityPct)
+              (songId, matchPct, linearityPct)
           })
-          .sortBy(_._3)
-          .reverse
+          .sortBy(- _._3)
           .take(5)
-          .map({
-            case (songName, matchPct, linearityPct) =>
-              s"==> $songName <==".padTo(30, '=') ++ "\n" ++
-              s"- Hashes matching at ${roundToTwoPlaces(matchPct)}%\n" ++
-              s"- Linearity matching at: ${roundToTwoPlaces(linearityPct)}%\n"
+          .traverse({
+            case (songId, matchPct, linearityPct) =>
+              metadataDB.getSong(songId).flatMap({
+                case None => IO.raiseError(new Error(s"No metadata for song ID $songId"))
+                case Some(metadata) => IO.pure(SongMatch(songId, metadata, matchPct, linearityPct))
+              })
           })
       )
+
+  private def formatMatch(matchingSong: SongMatch): String =
+    s"==> ${matchingSong.songData.get("name").getOrElse("Unknown")} <==".padTo(30, '=') ++ "\n" ++
+    s"- Hashes matching at ${roundToTwoPlaces(matchingSong.matchPercentage)}%\n" ++
+    s"- Linearity matching at: ${roundToTwoPlaces(matchingSong.linearityMatchPercentage)}%\n"
 
   def run(args: List[String]): IO[ExitCode] =
     for {
       databaseHandles                        <- Storage.setup
-      (given FootprintsDB, given MetadataDB) =  databaseHandles
+      (given FootprintDB, given MetadataDB) =  databaseHandles
       audioChunks                            <- MicRecorder.recordChunks
       footprint                              =  SoundFootprintGenerator.transform(audioChunks)
       results                                <- getMatchingSongs(footprint)
       _                                      <- results match {
-                                                  case Nil     => IO.println("NO MATCH FOUND")
-                                                  case results =>
+                                                  case ArraySeq() => IO.println("NO MATCH FOUND")
+                                                  case matches =>
                                                     IO.println("\nFOUND:\n") *>
-                                                    IO.println(results.mkString("\n") ++ "\n")
+                                                    IO.println(
+                                                      matches
+                                                        .map(formatMatch)
+                                                        .mkString("\n") ++ "\n"
+                                                    )
                                                 }
     } yield ExitCode.Success
 
