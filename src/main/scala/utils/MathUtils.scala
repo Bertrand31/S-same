@@ -8,14 +8,14 @@ object MathUtils:
 
   val roundToTwoPlaces: Double => Double = round(2)
 
-  def longToByteArray(long: Long): Array[Byte] =
-    BigInt(long).toByteArray.reverse.take(8).padTo(8, 0.toByte).reverse
+  def intToByteArray(int: Int): Array[Byte] =
+    BigInt(int).toByteArray.reverse.take(4).padTo(4, 0.toByte).reverse
 
-  def byteArrayToLong(arr: Array[Byte]): Long =
-    BigInt(arr.take(8)).toLong
+  def byteArrayToInt(arr: Array[Byte]): Int =
+    BigInt(arr.reverse.take(4).reverse).toInt
 
-  def charToByteArray(char: Char): Array[Byte] =
-    BigInt(char).toByteArray.reverse.take(2).padTo(2, 0.toByte).reverse
+  def shortToByteArray(short: Short): Array[Byte] =
+    BigInt(short).toByteArray.reverse.take(2).padTo(2, 0.toByte).reverse
 
-  def byteArrayToChar(arr: Array[Byte]): Char =
-    BigInt(arr.take(8)).toChar
+  def byteArrayToShort(arr: Array[Byte]): Short =
+    BigInt(arr.reverse.take(2).reverse).toShort
