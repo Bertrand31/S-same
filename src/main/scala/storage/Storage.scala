@@ -8,34 +8,45 @@ import scala.collection.immutable.ArraySeq
 import scala.jdk.CollectionConverters.MapHasAsScala
 import cats.implicits._
 import cats.effect.IO
-import io.circe.syntax._
-import io.circe.parser.decode
 import com.aerospike.client._
 import com.aerospike.client.policy.{Policy, WritePolicy}
+import com.aerospike.client.cdt._
 import utils.MathUtils._
 
 object StorageConstants {
 
+  val IDNamespace = "ids"
+  val IDDefaultRecord = "id"
+  val SingleCounterBin = "id-bin"
+
   val MetadataNamespace = "metadata"
-  val MetadataSet = "metadata"
+  val MetadataSet = null
 
   val FooprintNamespace = "footprint"
-  val FootprintSet = "footprint"
-  val FootprintBin = "slice-id"
+  val FootprintSet = null
+  val FootprintBin = "slice-id" // Try null here
 }
 
-final case class FootprintDB(private val db: AerospikeClient) {
+trait AerospikeHandler(private val db: AerospikeClient) {
+
+  def release: IO[Unit] =
+    IO { db.close() }
+}
+
+final case class FootprintDB(private val db: AerospikeClient) extends AerospikeHandler(db) {
 
   private val writePolicy = new WritePolicy()
   writePolicy.sendKey = true
 
-  def storeSong(id: Int, footprint: ArraySeq[Long]): IO[Unit] =
+  def storeSong(songId: Int, footprint: ArraySeq[Long]): IO[Unit] =
     footprint.zipWithIndex.traverse_({
       case (hash, index) =>
-        val data = BigInt(shortToByteArray(index.toShort) ++ intToByteArray(id)).toLong
+        val data = BigInt(shortToByteArray(index.toShort) ++ intToByteArray(songId)).toLong
+        println(songId)
+        println((shortToByteArray(index.toShort) ++ intToByteArray(songId)).toList)
         val key = Key(StorageConstants.FooprintNamespace, StorageConstants.FootprintSet, hash)
         val value = Bin(StorageConstants.FootprintBin, data)
-        IO { db.put(writePolicy, key, value) }
+        IO(db.put(writePolicy, key, value))
     })
 
   private val readPolicy = new Policy()
@@ -49,22 +60,30 @@ final case class FootprintDB(private val db: AerospikeClient) {
         (byteArrayToShort(idxBytes), byteArrayToInt(songIdBytes))
       ))
   }
-
-  def release: IO[Unit] =
-    IO { db.close() }
 }
 
-final case class MetadataDB(private val db: AerospikeClient) {
+final case class MetadataDB(private val db: AerospikeClient) extends AerospikeHandler(db) {
 
   private val writePolicy = new WritePolicy()
   writePolicy.sendKey = true
 
-  def storeSong(id: Long, metadata: Map[String, String]): IO[Unit] = {
-    val key = Key(StorageConstants.MetadataNamespace, StorageConstants.MetadataSet, id)
-    val bins = metadata.map({
-      case (metaKey, metaVal) => Bin(metaKey, metaVal)
-    }).toArray
-    IO(db.put(writePolicy, key, bins*))
+  def storeSong(metadata: Map[String, String]): IO[Int] = {
+    val idKey = Key(StorageConstants.IDNamespace, "song-id", StorageConstants.IDDefaultRecord)
+    val incrementCounter = Bin(StorageConstants.SingleCounterBin, 1)
+    IO {
+      db.operate(
+        writePolicy,
+        idKey,
+        Operation.add(incrementCounter),
+        Operation.get(StorageConstants.SingleCounterBin),
+      )
+    }.map(_.getInt(StorageConstants.SingleCounterBin)).flatMap(songId =>
+      val key = Key(StorageConstants.MetadataNamespace, StorageConstants.MetadataSet, songId)
+      val bins = metadata.map({
+        case (metaKey, metaVal) => Bin(metaKey, metaVal)
+      }).toArray
+      IO(db.put(writePolicy, key, bins*)).as(songId)
+    )
   }
 
   private val readPolicy = new Policy()
@@ -74,9 +93,6 @@ final case class MetadataDB(private val db: AerospikeClient) {
     IO(Option(db.get(readPolicy, key)))
       .map(_.map(_.bins.asScala.map(_.bimap(identity, _.toString)).toMap))
   }
-
-  def release: IO[Unit] =
-    IO { db.close() }
 }
 
 object Storage:

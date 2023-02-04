@@ -29,8 +29,7 @@ object SoundLoader extends IOApp:
       audioChunks <- WavLoader.wavToByteChunks(audioFile)
       footprint    = SoundFootprintGenerator.transform(audioChunks)
       songName     = audioFile.getName().split('.').init.mkString("")
-      songId       = MurmurHash3.stringHash(songName, 123) // This ID should come from AS
-      _           <- metadataDB.storeSong(songId, Map("name" -> songName))
+      songId      <- metadataDB.storeSong(Map("name" -> songName))
       _           <- footprintsDB.storeSong(songId, footprint)
       _           <- IO.println(s"$songName was ingested successfuly")
     } yield ()
