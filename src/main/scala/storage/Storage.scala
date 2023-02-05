@@ -15,21 +15,23 @@ import utils.MathUtils._
 
 object StorageConstants {
 
-  val IDNamespace = "ids"
-  val IDDefaultRecord = "id"
-  val SingleCounterBin = "id-bin"
-
   val MetadataNamespace = "metadata"
-  val MetadataSet = null
+  val MetadataSet = "metadata"
+
+  // Collocated with metadata because of Aerospike CE's limitation to 2 namespaces
+  val IDNamespace = MetadataNamespace
+  val IDSet = "ids"
+  val IDDefaultRecord = "song-id"
+  val SingleCounterBin = "id-bin"
 
   val FooprintNamespace = "footprint"
   val FootprintSet = null
-  val FootprintBin = "slice-id" // Try null here
+  val FootprintBin = "" // single-bin namespace implies empty bin name
 }
 
 trait AerospikeHandler(private val db: AerospikeClient) {
 
-  def release: IO[Unit] =
+  final def release: IO[Unit] =
     IO { db.close() }
 }
 
@@ -42,8 +44,6 @@ final case class FootprintDB(private val db: AerospikeClient) extends AerospikeH
     footprint.zipWithIndex.traverse_({
       case (hash, index) =>
         val data = BigInt(shortToByteArray(index.toShort) ++ intToByteArray(songId)).toLong
-        println(songId)
-        println((shortToByteArray(index.toShort) ++ intToByteArray(songId)).toList)
         val key = Key(StorageConstants.FooprintNamespace, StorageConstants.FootprintSet, hash)
         val value = Bin(StorageConstants.FootprintBin, data)
         IO(db.put(writePolicy, key, value))
@@ -68,7 +68,7 @@ final case class MetadataDB(private val db: AerospikeClient) extends AerospikeHa
   writePolicy.sendKey = true
 
   def storeSong(metadata: Map[String, String]): IO[Int] = {
-    val idKey = Key(StorageConstants.IDNamespace, "song-id", StorageConstants.IDDefaultRecord)
+    val idKey = Key(StorageConstants.IDNamespace, StorageConstants.IDSet, StorageConstants.IDDefaultRecord)
     val incrementCounter = Bin(StorageConstants.SingleCounterBin, 1)
     IO {
       db.operate(
