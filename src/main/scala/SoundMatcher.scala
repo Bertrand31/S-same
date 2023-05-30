@@ -51,7 +51,8 @@ object Sésame extends IOApp:
   private def formatMatch(matchingSong: SongMatch): String =
     s"==> ${matchingSong.songData.get("name").getOrElse("Unknown")} <==".padTo(30, '=') ++ "\n" ++
     s"- Hashes matching at ${roundToTwoPlaces(matchingSong.matchPercentage)}%\n" ++
-    s"- Linearity matching at: ${roundToTwoPlaces(matchingSong.linearityMatchPercentage)}%\n"
+    s"- Linearity matching at: ${roundToTwoPlaces(matchingSong.linearityMatchPercentage)}%\n" ++
+    s"- Metadata: ${matchingSong.songData - "name"}"
 
   def run(args: List[String]): IO[ExitCode] =
     for {

@@ -12,6 +12,9 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-core" % "0.15.0-M1",
   "io.circe" %% "circe-parser" % "0.15.0-M1",
 
+  // Metadata retrieval
+  "net.jthink" % "jaudiotagger" % "3.0.1",
+
   // Tests
   "org.scalactic" %% "scalactic" % "3.2.13",
   "org.scalatest" %% "scalatest" % "3.2.13" % "test",

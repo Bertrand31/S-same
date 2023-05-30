@@ -10,6 +10,7 @@ import cats.implicits._
 import cats.effect.IO
 import com.aerospike.client._
 import com.aerospike.client.policy.{Policy, WritePolicy}
+import com.aerospike.client.policy.GenerationPolicy
 import com.aerospike.client.cdt._
 import utils.MathUtils._
 
@@ -39,6 +40,7 @@ final case class FootprintDB(private val db: AerospikeClient) extends AerospikeH
 
   private val writePolicy = new WritePolicy()
   writePolicy.sendKey = true
+  writePolicy.generationPolicy = GenerationPolicy.NONE
 
   def storeSong(songId: Int, footprint: ArraySeq[Long]): IO[Unit] =
     footprint.zipWithIndex.traverse_({
@@ -66,6 +68,7 @@ final case class MetadataDB(private val db: AerospikeClient) extends AerospikeHa
 
   private val writePolicy = new WritePolicy()
   writePolicy.sendKey = true
+  writePolicy.generationPolicy = GenerationPolicy.NONE
 
   def storeSong(metadata: Map[String, String]): IO[Int] = {
     val idKey = Key(StorageConstants.IDNamespace, StorageConstants.IDSet, StorageConstants.IDDefaultRecord)
@@ -99,7 +102,7 @@ object Storage:
 
   def setup: IO[(FootprintDB, MetadataDB)] =
     IO {
-      val client = new AerospikeClient("127.0.0.1", 3000)
+      val client = new AerospikeClient("0.0.0.0", 3000)
       (
         FootprintDB(client),
         MetadataDB(client),
