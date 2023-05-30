@@ -4,7 +4,7 @@ import java.io._
 import javax.sound.sampled._
 import cats.effect.IO
 
-object WaveUtils:
+object WavUtils:
 
   import sesame.Commons.InputFormat
 

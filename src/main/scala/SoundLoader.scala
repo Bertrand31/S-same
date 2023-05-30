@@ -2,12 +2,10 @@ package sesame
 
 import java.io.File
 import scala.util.hashing.MurmurHash3
-import scala.jdk.CollectionConverters._
 import scala.collection.immutable.ArraySeq
-import org.jaudiotagger.audio.wav.WavTagReader
 import cats.implicits._
 import cats.effect._
-import utils.{SoundPlayback, FileUtils}
+import utils.{MetadataUtils, SoundPlayback, FileUtils}
 
 object SoundLoader extends IOApp:
 
@@ -23,27 +21,17 @@ object SoundLoader extends IOApp:
       _           <- FileUtils.writeComplexToFile(new File(s"data/footprintData/$songName.csv"), footprint)
     } yield ()
 
-  private val WavMetadataReader = new WavTagReader("")
-
-  private def getFlacMetadata(audioFile: File): IO[Map[String, String]] = IO {
-    WavMetadataReader.read(audioFile.toPath)
-      .getFields()
-      .asScala
-      .map(tag => (tag.getId, tag.getRawContent.map(_.toChar).mkString))
-      .toMap
-  }
-
   private def processAndStoreSong(audioFile: File)(
       using footprintsDB: FootprintDB,
       metadataDB: MetadataDB,
   ): IO[Unit] =
     for {
+      metadata    <- MetadataUtils.getWavMetadata(audioFile)
+      songId      <- metadataDB.storeSong(metadata)
       audioChunks <- WavLoader.wavToByteChunks(audioFile)
       footprint    = SoundFootprintGenerator.transform(audioChunks)
-      songName     = audioFile.getName().split('.').init.mkString("")
-      metadata    <- getFlacMetadata(audioFile)
-      songId      <- metadataDB.storeSong(Map("name" -> songName) ++ metadata)
       _           <- footprintsDB.storeSong(songId, footprint)
+      songName     = metadata.getOrElse(MetadataUtils.songTitleKey, "Unknown title")
       _           <- IO.println(s"$songName was ingested successfuly")
     } yield ()
 
