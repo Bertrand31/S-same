@@ -7,14 +7,14 @@ import cats.implicits._
 import cats.effect._
 import utils.{MetadataUtils, SoundPlayback, FileUtils}
 
-object SoundLoader extends IOApp:
+object TracksIngester extends IOApp:
 
   private val InputSongsDirectory = new File("./data/processedFiles")
 
   private def debug(audioFile: File): IO[Unit] =
     for {
       audioChunks <- WavLoader.wavToByteChunks(audioFile)
-      chunkList = audioChunks.toArray
+      chunkList    = audioChunks.toArray
       songName     = audioFile.getName().split('.').init.mkString("")
       // _           <- FileUtils.writeBytesToFile(new File(s"data/bytesData/$songName.csv"), chunkList.flatten)
       footprint    = SoundFootprintGenerator.toFourier(chunkList.iterator)
@@ -30,8 +30,9 @@ object SoundLoader extends IOApp:
       songId      <- metadataDB.storeSong(metadata)
       audioChunks <- WavLoader.wavToByteChunks(audioFile)
       footprint    = SoundFootprintGenerator.transform(audioChunks)
+      _ = println(s"Song ${metadata("TITLE")} is ${footprint.size} hashes long")
       _           <- footprintsDB.storeSong(songId, footprint)
-      songName     = metadata.getOrElse(MetadataUtils.songTitleKey, "Unknown title")
+      songName     = metadata.getOrElse(MetadataUtils.SongTitleKey, "Unknown title")
       _           <- IO.println(s"$songName was ingested successfuly")
     } yield ()
 

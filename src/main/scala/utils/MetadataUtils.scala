@@ -7,7 +7,8 @@ import org.jaudiotagger.audio.wav.WavTagReader
 
 object MetadataUtils:
 
-  val songTitleKey = "TITLE"
+  val SongTitleKey = "TITLE"
+  val ArtistKey = "ARTIST"
 
   private val WavMetadataReader = new WavTagReader("")
 

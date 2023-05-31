@@ -4,6 +4,7 @@ import scala.util.{Failure, Success}
 import scala.collection.immutable.ArraySeq
 import cats.implicits._
 import cats.effect._
+import utils.MetadataUtils
 import utils.MathUtils.roundToTwoPlaces
 
 object Sésame extends IOApp:
@@ -49,10 +50,11 @@ object Sésame extends IOApp:
       )
 
   private def formatMatch(matchingSong: SongMatch): String =
-    s"==> ${matchingSong.songData.get("name").getOrElse("Unknown")} <==".padTo(30, '=') ++ "\n" ++
+    val songName = matchingSong.songData.get(MetadataUtils.SongTitleKey).getOrElse("Unknown")
+    val artist = matchingSong.songData.get(MetadataUtils.ArtistKey).getOrElse("Unknown")
+    s"==> $artist - $songName <==".padTo(30, '=') ++ "\n" ++
     s"- Hashes matching at ${roundToTwoPlaces(matchingSong.matchPercentage)}%\n" ++
-    s"- Linearity matching at: ${roundToTwoPlaces(matchingSong.linearityMatchPercentage)}%\n" ++
-    s"- Metadata: ${matchingSong.songData - "name"}"
+    s"- Linearity matching at: ${roundToTwoPlaces(matchingSong.linearityMatchPercentage)}%\n"
 
   def run(args: List[String]): IO[ExitCode] =
     for {
