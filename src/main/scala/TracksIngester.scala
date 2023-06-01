@@ -30,10 +30,8 @@ object TracksIngester extends IOApp:
       songId      <- metadataDB.storeSong(metadata)
       audioChunks <- WavLoader.wavToByteChunks(audioFile)
       footprint    = SoundFootprintGenerator.transform(audioChunks)
-      _ = println(s"Song ${metadata("TITLE")} is ${footprint.size} hashes long")
       _           <- footprintsDB.storeSong(songId, footprint)
-      songName     = metadata.getOrElse(MetadataUtils.SongTitleKey, "Unknown title")
-      _           <- IO.println(s"$songName was ingested successfuly")
+      _           <- IO.println(s"${metadata.getTitle} was ingested successfuly")
     } yield ()
 
   def run(args: List[String]): IO[ExitCode] =

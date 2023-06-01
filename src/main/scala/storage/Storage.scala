@@ -13,6 +13,7 @@ import com.aerospike.client.policy.{Policy, WritePolicy}
 import com.aerospike.client.policy.GenerationPolicy
 import com.aerospike.client.cdt._
 import utils.MathUtils._
+import utils.SongMetadata
 
 object StorageConstants {
 
@@ -70,7 +71,7 @@ final case class MetadataDB(private val db: AerospikeClient) extends AerospikeHa
   writePolicy.sendKey = true
   writePolicy.generationPolicy = GenerationPolicy.NONE
 
-  def storeSong(metadata: Map[String, String]): IO[Int] = {
+  def storeSong(metadata: SongMetadata): IO[Int] = {
     val idKey = Key(StorageConstants.IDNamespace, StorageConstants.IDSet, StorageConstants.IDDefaultRecord)
     val incrementCounter = Bin(StorageConstants.SingleCounterBin, 1)
     IO {
@@ -82,7 +83,7 @@ final case class MetadataDB(private val db: AerospikeClient) extends AerospikeHa
       )
     }.map(_.getInt(StorageConstants.SingleCounterBin)).flatMap(songId =>
       val key = Key(StorageConstants.MetadataNamespace, StorageConstants.MetadataSet, songId)
-      val bins = metadata.map({
+      val bins = metadata.toMap.map({
         case (metaKey, metaVal) => Bin(metaKey, metaVal)
       }).toArray
       IO(db.put(writePolicy, key, bins*)).as(songId)
@@ -91,10 +92,11 @@ final case class MetadataDB(private val db: AerospikeClient) extends AerospikeHa
 
   private val readPolicy = new Policy()
 
-  def getSong(id: Long): IO[Option[Map[String, String]]] = {
+  def getSong(id: Long): IO[Option[SongMetadata]] = {
     val key = Key(StorageConstants.MetadataNamespace, StorageConstants.MetadataSet, id)
     IO(Option(db.get(readPolicy, key)))
       .map(_.map(_.bins.asScala.map(_.bimap(identity, _.toString)).toMap))
+      .map(_.map(SongMetadata(_)))
   }
 }
 
