@@ -22,7 +22,7 @@ class SoundFootprintGeneratorSpec extends AnyFlatSpec with should.Matchers:
         audioChunks <- WavLoader.wavToByteChunks(audioFile)
         footprint    = SoundFootprintGenerator.transform(audioChunks)
         _           <- footprintDB.storeSong(123456, footprint)
-        results     <- Sésame.getMatchingSongs(footprint)(using footprintDB)
+        results     <- Sésame.getMatchingSongs(footprint)(using footprintDB, metadataDB)
         _           <- footprintDB.release
         _           <- metadataDB.release
       } yield results

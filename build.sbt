@@ -5,8 +5,8 @@ version := "0.1"
 scalaVersion := "3.3.0"
 
 libraryDependencies ++= Seq(
-  "org.typelevel" %% "cats-core" % "2.7.0",
-  "org.typelevel" %% "cats-effect" % "3.3.14",
+  "org.typelevel" %% "cats-core" % "2.9.0",
+  "org.typelevel" %% "cats-effect" % "3.5.0",
   "org.apache.commons" % "commons-math3" % "3.6.1",
   "com.aerospike" % "aerospike-client" % "latest.integration",
   "io.circe" %% "circe-core" % "0.15.0-M1",
@@ -16,8 +16,9 @@ libraryDependencies ++= Seq(
   "net.jthink" % "jaudiotagger" % "3.0.1",
 
   // Tests
-  "org.scalactic" %% "scalactic" % "3.2.13",
-  "org.scalatest" %% "scalatest" % "3.2.13" % "test",
+  "org.scalactic" %% "scalactic" % "3.2.16" % Test,
+  "org.scalatest" %% "scalatest" % "3.2.16" % Test,
+  "com.whisk" %% "docker-testkit-scalatest" % "0.11.0" % Test,
 )
 
 scalacOptions ++= Seq(
