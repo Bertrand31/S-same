@@ -1,11 +1,10 @@
 ARG VERSION=ce-6.3.0.4_1
 FROM aerospike:$VERSION
 
-# RUN /bin/bash -c 'apt update && apt install -y wget neovim'
-RUN apt update && apt install -y --allow-change-held-packages wget neovim
-RUN wget -O /etc/aerospike/aerospike.conf "https://raw.githubusercontent.com/Bertrand31/Sesame/master/aerospike.conf"
-RUN apt clean -y
-
-# CMD ["/bin/bash"]
+RUN apt update \
+  && apt install -qq -o=Dpkg::Use-Pty=0 -y wget >/dev/null \
+  && apt clean -qq -o=Dpkg::Use-Pty=0 -y >/dev/null \
+  # && rm /etc/aerospike/aerospike.conf \
+  && wget --quiet "https://raw.githubusercontent.com/Bertrand31/Sesame/master/aerospike.conf" -O /etc/aerospike/aerospike2.conf
 
 EXPOSE 3000

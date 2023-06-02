@@ -14,6 +14,10 @@ import com.aerospike.client.policy.GenerationPolicy
 import com.aerospike.client.cdt._
 import utils.MathUtils._
 import utils.SongMetadata
+import com.aerospike.client.policy.ClientPolicy
+import com.aerospike.client.policy.ReadModeSC
+import com.aerospike.client.policy.RecordExistsAction
+import com.aerospike.client.policy.CommitLevel
 
 object StorageConstants {
 
@@ -40,8 +44,10 @@ trait AerospikeHandler(private val db: AerospikeClient) {
 final case class FootprintDB(private val db: AerospikeClient) extends AerospikeHandler(db) {
 
   private val writePolicy = new WritePolicy()
-  writePolicy.sendKey = true
+  writePolicy.sendKey = false // Doesn't store keys, only their digests
   writePolicy.generationPolicy = GenerationPolicy.NONE
+  writePolicy.recordExistsAction = RecordExistsAction.REPLACE
+  writePolicy.commitLevel = CommitLevel.COMMIT_MASTER
 
   def storeSong(songId: Int, footprint: ArraySeq[Long]): IO[Unit] =
     footprint.zipWithIndex.traverse_({
@@ -68,16 +74,23 @@ final case class FootprintDB(private val db: AerospikeClient) extends AerospikeH
 final case class MetadataDB(private val db: AerospikeClient) extends AerospikeHandler(db) {
 
   private val writePolicy = new WritePolicy()
-  writePolicy.sendKey = true
+  writePolicy.sendKey = false // Doesn't store keys, only their digests
   writePolicy.generationPolicy = GenerationPolicy.NONE
+  writePolicy.readModeSC = ReadModeSC.LINEARIZE
+  writePolicy.commitLevel = CommitLevel.COMMIT_MASTER
+
+  private val IdKey = Key(
+    StorageConstants.IDNamespace,
+    StorageConstants.IDSet,
+    StorageConstants.IDDefaultRecord,
+  )
 
   def storeSong(metadata: SongMetadata): IO[Int] = {
-    val idKey = Key(StorageConstants.IDNamespace, StorageConstants.IDSet, StorageConstants.IDDefaultRecord)
     val incrementCounter = Bin(StorageConstants.SingleCounterBin, 1)
     IO {
       db.operate(
         writePolicy,
-        idKey,
+        IdKey,
         Operation.add(incrementCounter),
         Operation.get(StorageConstants.SingleCounterBin),
       )

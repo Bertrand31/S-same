@@ -9,7 +9,7 @@ While I've been using this service with only a handful of songs I have handy, I'
 The algorithm behind this service has been described in a paper released in 2003 by ✨a company✨ I won't name because they have seemingly been acting like patent trolls on open-source, side project-type codebases.
 
 Anyway, the basic idea is to slice up a song into same-length segments, and use the Fourier transformation on each of these segments to get spectrograms.
-We then pick relevant "peaks" from each spectrogram, and combine them into a hashes which become the footprint of that song.
+We then pick relevant "peaks" from each spectrogram, and combine them into hashes which become the footprint of that song.
 
 For a much better and more detailed explanation, head to this [article](https://tinyurl.com/sesame-bertrand) or, even better, read [the original paper](https://tinyurl.com/sesame-bertrand-2).
 
@@ -71,7 +71,7 @@ However, while this data is crucial for us to be able to operate, it is easily r
 #### How metadata is stored
 
 We will assume all input audio files have adequate metadata attached, with at least a `TITLE` and an `ARTIST` attributes.
-Upon ingestion, files' metadata is stored in dedicated namespace (Aerospike's name for a database), `metadata`.
+Upon ingestion, files' metadata is stored in dedicated namespace (Aerospike's name for a database) `metadata`.
 
 Inside this namespace is a set (Aerospike's name for a table), also called `metadata`. Each record (row) is made up of a key, which is the song ID, and bins (columns). Those bins' names are not predetermined, we simply extract all of the file's metadata and store it as is. Some level of normalization will have to be introduced in the future.
 
@@ -86,10 +86,10 @@ This makes each record a little lighter, as it doesn't store information regardi
 
 Data in this namespace is compressed using LZ4 with a compression level of 1.
 
-### Where do IDs come from?
+#### Where do IDs come from?
 
-Generating sequential IDs in a distributed system without creating a Single Point Of Failure or a performance bottleneck is always a tricky question.
-In our case, we use a separate, in-memory namespace with full linearizability enabled as well as replication, which contains only one key-value pair: "songId" and the last ID used. Every time we ingest a song, we `increment` that number (Aeorspike supports atomic increments on integer bins) and use the result as a new ID.
+Generating sequential IDs in a distributed system without creating a Single Point Of Failure or a performance bottleneck is always a tricky topic.
+In our case, we use a separate, in-memory namespace with full linearizability enabled as well as replication, which contains only one key-value pair: "songId" and the last ID used. Every time we ingest a song, we `increment` that number (Aeorspike supports atomic increments on integer bins) and use the result as a new ID. The `increment` and the following `get` operations are part of a transaction.
 
 While this very simple solution may not provide the performance of some more sophisticated systems, it is important to note that the number of queries on that namespace will be very, very low compared to the two others. Especially the `footprint` one.
 It is then highly unlikely for it to become a bottleneck. And even if it somehow did, it would only slow down the ingestion process, not the end user's experience.
@@ -97,6 +97,6 @@ It is then highly unlikely for it to become a bottleneck. And even if it somehow
 ## Aerospike cheatsheet
 
     docker build -t sesame:0.1 .
-    docker run -dp 3000:3000 sesame:0.1 --early-verbose
+    docker run -dp 3000:3000 sesame:0.1
     docker exec -it (docker ps -a -q | head -n1) /bin/bash
     docker restart (docker ps -a -q | head -n1)
