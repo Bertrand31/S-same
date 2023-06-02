@@ -14,7 +14,7 @@ object MicRecorder:
       microphone.open(Commons.InputFormat)
       microphone.start() // Start capturing
 
-      val output = (0 to NumberOfChunksToRecord).map(_ =>
+      val output = (0 to NumberOfChunksToRecord).toArray.map(_ =>
         val chunk = new Array[Byte](Commons.ChunkSize)
         microphone.read(chunk, 0, Commons.ChunkSize)
         chunk

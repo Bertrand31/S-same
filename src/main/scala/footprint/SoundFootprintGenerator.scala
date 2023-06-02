@@ -3,6 +3,7 @@ package sesame
 import scala.collection.immutable.ArraySeq
 import org.apache.commons.math3.complex.Complex
 import org.apache.commons.math3.transform.{DftNormalization, FastFourierTransformer, TransformType}
+import scala.util.hashing.MurmurHash3
 
 object SoundFootprintGenerator:
 
@@ -10,7 +11,7 @@ object SoundFootprintGenerator:
 
   val toFourier: Iterator[Array[Byte]] => Iterator[Array[Complex]] =
     _
-      .map(_.map(Complex(_, 0))) // Time domain data into a complex number with imaginary part as 0
+      .map(_.map(_.toDouble))
       .map(transformer.transform(_, TransformType.FORWARD)) // Perform FFT analysis on the chunk
 
   private val LowerLimit = 40
@@ -20,11 +21,8 @@ object SoundFootprintGenerator:
 
   private val FuzFactor = 2
 
-  private def hash(p1: Long, p2: Long, p3: Long, p4: Long): Long =
-    (p4 - (p4 % FuzFactor)) * 100_000_000 +
-    (p3 - (p3 % FuzFactor)) * 100_000 +
-    (p2 - (p2 % FuzFactor)) * 100 +
-    (p1 - (p1 % FuzFactor))
+  private def hash(peaks: Array[Long]): Long =
+    MurmurHash3.stringHash(peaks.mkString("|"))
 
   private def getIndex(freq: Int): Int =
     Range.indexWhere(_ >= freq)
@@ -42,8 +40,8 @@ object SoundFootprintGenerator:
           recordPoints.update(index, freq)
         }
       )
-      // DEVIATION: discard first point
-      hash(recordPoints(1), recordPoints(2), recordPoints(3), recordPoints(4))
+      // WARNING: discarding last point
+      hash(recordPoints.init)
     ).to(ArraySeq)
 
   val transform: Iterator[Array[Byte]] => ArraySeq[Long] =

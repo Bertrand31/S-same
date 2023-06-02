@@ -20,9 +20,9 @@ class StorageSpec extends AnyFlatSpec with should.Matchers:
     val test = for {
       dbs         <- Storage.setup
       (footprintDB, metadataDB) = dbs
-      _         <- footprintDB.storeSong(123456, hashes)
-      idxHashes  = hashes.zipWithIndex
-      matches   <- idxHashes.traverse({ case (hash, _) => footprintDB.lookupHash(hash) })
+      _           <- footprintDB.storeSong(123456, hashes)
+      idxHashes   =  hashes.zipWithIndex
+      matches     <- idxHashes.traverse({ case (hash, _) => footprintDB.lookupHash(hash) })
       _           <- footprintDB.release
       _           <- metadataDB.release
     } yield idxHashes.zip(matches).foreach({
