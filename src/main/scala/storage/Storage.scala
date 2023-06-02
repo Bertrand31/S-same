@@ -19,7 +19,7 @@ import com.aerospike.client.policy.ReadModeSC
 import com.aerospike.client.policy.RecordExistsAction
 import com.aerospike.client.policy.CommitLevel
 
-object StorageConstants {
+object StorageConstants:
 
   val MetadataNamespace = "metadata"
   val MetadataSet = "metadata"
@@ -31,17 +31,15 @@ object StorageConstants {
   val SingleCounterBin = "id-bin"
 
   val FooprintNamespace = "footprint"
-  val FootprintSet = null
+  val FootprintSet = null // we don't need sets. Not using a set name saves space on every record
   val FootprintBin = "" // single-bin namespace implies empty bin name
-}
 
-trait AerospikeHandler(private val db: AerospikeClient) {
+trait AerospikeHandler(private val db: AerospikeClient):
 
   final def release: IO[Unit] =
     IO { db.close() }
-}
 
-final case class FootprintDB(private val db: AerospikeClient) extends AerospikeHandler(db) {
+final case class FootprintDB(private val db: AerospikeClient) extends AerospikeHandler(db):
 
   private val writePolicy = new WritePolicy()
   writePolicy.sendKey = false // Doesn't store keys, only their digests
@@ -60,7 +58,7 @@ final case class FootprintDB(private val db: AerospikeClient) extends AerospikeH
 
   private val readPolicy = new Policy()
 
-  def lookupHash(hash: Long): IO[Option[(Short, Int)]] = {
+  def lookupHash(hash: Long): IO[Option[(Short, Int)]] =
     val key = Key(StorageConstants.FooprintNamespace, StorageConstants.FootprintSet, hash)
     IO(Option(db.get(readPolicy, key)))
       .map(_.map(record =>
@@ -68,10 +66,8 @@ final case class FootprintDB(private val db: AerospikeClient) extends AerospikeH
         val (idxBytes, songIdBytes) = bytes.splitAt(2)
         (byteArrayToShort(idxBytes), byteArrayToInt(songIdBytes))
       ))
-  }
-}
 
-final case class MetadataDB(private val db: AerospikeClient) extends AerospikeHandler(db) {
+final case class MetadataDB(private val db: AerospikeClient) extends AerospikeHandler(db):
 
   private val writePolicy = new WritePolicy()
   writePolicy.sendKey = false // Doesn't store keys, only their digests
@@ -85,7 +81,7 @@ final case class MetadataDB(private val db: AerospikeClient) extends AerospikeHa
     StorageConstants.IDDefaultRecord,
   )
 
-  def storeSong(metadata: SongMetadata): IO[Int] = {
+  def storeSong(metadata: SongMetadata): IO[Int] =
     val incrementCounter = Bin(StorageConstants.SingleCounterBin, 1)
     IO {
       db.operate(
@@ -101,17 +97,14 @@ final case class MetadataDB(private val db: AerospikeClient) extends AerospikeHa
       }).toArray
       IO(db.put(writePolicy, key, bins*)).as(songId)
     )
-  }
 
   private val readPolicy = new Policy()
 
-  def getSong(id: Long): IO[Option[SongMetadata]] = {
+  def getSong(id: Long): IO[Option[SongMetadata]] =
     val key = Key(StorageConstants.MetadataNamespace, StorageConstants.MetadataSet, id)
     IO(Option(db.get(readPolicy, key)))
       .map(_.map(_.bins.asScala.map(_.bimap(identity, _.toString)).toMap))
       .map(_.map(SongMetadata(_)))
-  }
-}
 
 object Storage:
 
@@ -123,5 +116,3 @@ object Storage:
         MetadataDB(client),
       )
     }
-
-
