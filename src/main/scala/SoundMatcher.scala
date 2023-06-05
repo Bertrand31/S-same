@@ -16,38 +16,55 @@ object Sésame extends IOApp:
     linearityMatchPercentage: Float,
   )
 
+  def findCorrespondingHashes(footprint: ArraySeq[Long])(
+      using footprintDB: FootprintDB,
+  ): IO[ArraySeq[(Int, Int)]] =
+    IO.parTraverseN(10)(footprint)(footprintDB.lookupHash).map(
+      _
+        .zipWithIndex
+        .collect({
+          case (Some((indexInSong, songId)), indexInFootprint) =>
+            (songId, indexInSong - indexInFootprint)
+        })
+    )
+
+  val groupOffsetsBySong: ArraySeq[(Int, Int)] => ArraySeq[(Int, ArraySeq[Int])] =
+    _
+      .groupMap(_._1)(_._2)
+      .to(ArraySeq)
+
+  def rankMatches(footprintSize: Int): ArraySeq[(Int, ArraySeq[Int])] => ArraySeq[(Int, Float, Float)] =
+    _
+      .map({
+        case (songId, deltas) =>
+          val matchPct = deltas.size * 100 / footprintSize.toFloat
+          val deltaHistogram = deltas.groupMapReduce(identity)(_ => 1)(_ + _)
+          val linearityPct = (deltaHistogram.values.max * 100) / footprintSize.toFloat
+          (songId, matchPct, linearityPct)
+      })
+      .sortBy(- _._3)
+
+  private val MaxResults = 5
+
+  def formatMatches(matches: ArraySeq[(Int, Float, Float)])(using metadataDB: MetadataDB): IO[ArraySeq[SongMatch]] =
+    matches
+      .take(MaxResults)
+      .traverse({
+        case (songId, matchPct, linearityPct) =>
+          metadataDB.getSong(songId).flatMap({
+            case None => IO.raiseError(new Error(s"No metadata for song ID $songId"))
+            case Some(metadata) => IO.pure(SongMatch(songId, metadata, matchPct, linearityPct))
+          })
+      })
+
   def getMatchingSongs(footprint: ArraySeq[Long])(
       using footprintDB: FootprintDB,
       metadataDB: MetadataDB,
   ): IO[ArraySeq[SongMatch]] =
-    footprint
-      .traverse(footprintDB.lookupHash)
-      .flatMap(
-        _
-          .zipWithIndex
-          .collect({
-            case (Some((songIndex, songId)), footprintIndex) =>
-              (songId, songIndex - footprintIndex)
-          })
-          .groupMap(_._1)(_._2)
-          .to(ArraySeq)
-          .map({
-            case (songId, deltas) =>
-              val matchPct = deltas.size * 100 / footprint.size.toFloat
-              val deltaHistogram = deltas.groupMapReduce(identity)(_ => 1)(_ + _)
-              val linearityPct = (deltaHistogram.values.max * 100) / footprint.size.toFloat
-              (songId, matchPct, linearityPct)
-          })
-          .sortBy(- _._3)
-          .take(5)
-          .traverse({
-            case (songId, matchPct, linearityPct) =>
-              metadataDB.getSong(songId).flatMap({
-                case None => IO.raiseError(new Error(s"No metadata for song ID $songId"))
-                case Some(metadata) => IO.pure(SongMatch(songId, metadata, matchPct, linearityPct))
-              })
-          })
-      )
+    findCorrespondingHashes(footprint)
+      .map(groupOffsetsBySong)
+      .map(rankMatches(footprint.size))
+      .flatMap(formatMatches)
 
   private def formatMatch(matchingSong: SongMatch): String =
     val songName = matchingSong.songData.getTitle
