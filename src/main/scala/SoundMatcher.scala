@@ -33,8 +33,8 @@ object Sésame extends IOApp:
           .to(ArraySeq)
           .map({
             case (songId, deltas) =>
-              val deltaHistogram = deltas.groupMapReduce(identity)(_ => 1)(_ + _)
               val matchPct = deltas.size * 100 / footprint.size.toFloat
+              val deltaHistogram = deltas.groupMapReduce(identity)(_ => 1)(_ + _)
               val linearityPct = (deltaHistogram.values.max * 100) / footprint.size.toFloat
               (songId, matchPct, linearityPct)
           })
@@ -63,15 +63,10 @@ object Sésame extends IOApp:
       audioChunks     <- MicRecorder.recordChunks
       footprint       =  SoundFootprintGenerator.transform(audioChunks)
       results         <- getMatchingSongs(footprint)
-      _               <- results match {
+      _               <- results match
                            case ArraySeq() => IO.println("NO MATCH FOUND")
                            case matches =>
                              IO.println("\nFOUND:\n") *>
-                             IO.println(
-                               matches
-                                 .map(formatMatch)
-                                 .mkString("\n") ++ "\n"
-                             )
-                         }
+                             IO.println(matches.map(formatMatch).mkString("\n") ++ "\n")
     } yield ExitCode.Success
 

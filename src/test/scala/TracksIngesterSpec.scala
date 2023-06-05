@@ -8,26 +8,8 @@ import java.io.File
 import scala.collection.immutable.ArraySeq
 import cats.implicits._
 import cats.effect._
-import com.whisk.docker.*
-import com.whisk.docker.testkit.*
-import com.spotify.docker.client.messages.PortBinding
-import com.spotify.docker.client.messages.HostConfig.Bind
-import com.whisk.docker.testkit.scalatest.DockerTestKitForAll
 
-class TracksIngesterSpec extends AnyFlatSpec with should.Matchers with DockerTestKitForAll:
-
-  override val managedContainers =
-    ContainerSpec("aerospike:ce-6.3.0.4_1")
-      .withName(s"${getClass.getSimpleName}-aerospike")
-      .withPortBindings(
-        3000 -> PortBinding.of("127.0.0.1", 3000),
-        3001 -> PortBinding.of("127.0.0.1", 3001),
-        3002 -> PortBinding.of("127.0.0.1", 3002),
-      )
-      .withReadyChecker(DockerReadyChecker.LogLineContains("soon there will be cake!"))
-      .withVolumeBindings(Bind.from("/home/bertrand/Code/sésame/aerospike_conf").to("/opt/aerospike/etc/").build)
-      .toContainer
-      .toManagedContainer
+class TracksIngesterSpec extends AnyFlatSpec with should.Matchers with AerospikeDocker:
 
   import cats.effect.unsafe.implicits.global
 
@@ -35,6 +17,8 @@ class TracksIngesterSpec extends AnyFlatSpec with should.Matchers with DockerTes
 
     val hashes = ArraySeq(123, 456, 789, Long.MaxValue, 0)
     val songName = "Test Song"
+
+    Thread.sleep(2000)
 
     val test = for {
       databaseHandles           <- Storage.setup
