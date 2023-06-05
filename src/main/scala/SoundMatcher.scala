@@ -10,7 +10,7 @@ import utils.MathUtils.roundToTwoPlaces
 object Sésame extends IOApp:
 
   final case class SongMatch(
-    songId: Int,
+    songId: SongId,
     songData: SongMetadata,
     matchPercentage: Float,
     linearityMatchPercentage: Float,
@@ -18,22 +18,22 @@ object Sésame extends IOApp:
 
   def findCorrespondingHashes(footprint: ArraySeq[Long])(
       using footprintDB: FootprintDB,
-  ): IO[ArraySeq[(Int, Int)]] =
+  ): IO[ArraySeq[(SongId, Int)]] =
     IO.parTraverseN(10)(footprint)(footprintDB.lookupHash).map(
       _
         .zipWithIndex
         .collect({
-          case (Some((indexInSong, songId)), indexInFootprint) =>
+          case (Some((songId, indexInSong)), indexInFootprint) =>
             (songId, indexInSong - indexInFootprint)
         })
     )
 
-  val groupOffsetsBySong: ArraySeq[(Int, Int)] => ArraySeq[(Int, ArraySeq[Int])] =
+  val groupOffsetsBySong: ArraySeq[(SongId, Int)] => ArraySeq[(SongId, ArraySeq[Int])] =
     _
       .groupMap(_._1)(_._2)
       .to(ArraySeq)
 
-  def rankMatches(footprintSize: Int): ArraySeq[(Int, ArraySeq[Int])] => ArraySeq[(Int, Float, Float)] =
+  def rankMatches(footprintSize: Int): ArraySeq[(SongId, ArraySeq[Int])] => ArraySeq[(SongId, Float, Float)] =
     _
       .map({
         case (songId, deltas) =>
@@ -46,7 +46,7 @@ object Sésame extends IOApp:
 
   private val MaxResults = 5
 
-  def formatMatches(matches: ArraySeq[(Int, Float, Float)])(using metadataDB: MetadataDB): IO[ArraySeq[SongMatch]] =
+  def formatMatches(matches: ArraySeq[(SongId, Float, Float)])(using metadataDB: MetadataDB): IO[ArraySeq[SongMatch]] =
     matches
       .take(MaxResults)
       .traverse({
