@@ -19,6 +19,8 @@ import com.aerospike.client.policy.ReadModeSC
 import com.aerospike.client.policy.RecordExistsAction
 import com.aerospike.client.policy.CommitLevel
 
+final case class SongId(value: Int) extends AnyVal
+
 object StorageConstants:
 
   val MetadataNamespace = "metadata"
@@ -58,13 +60,13 @@ final case class FootprintDB(private val db: AerospikeClient) extends AerospikeH
 
   private val readPolicy = new Policy()
 
-  def lookupHash(hash: Long): IO[Option[(Short, Int)]] =
+  def lookupHash(hash: Long): IO[Option[(SongId, Short)]] =
     val key = Key(StorageConstants.FooprintNamespace, StorageConstants.FootprintSet, hash)
     IO(Option(db.get(readPolicy, key)))
       .map(_.map(record =>
         val bytes = record.getValue(StorageConstants.FootprintBin).asInstanceOf[Array[Byte]]
         val (idxBytes, songIdBytes) = bytes.splitAt(2)
-        (byteArrayToShort(idxBytes), byteArrayToInt(songIdBytes))
+        (SongId(byteArrayToInt(songIdBytes)), byteArrayToShort(idxBytes))
       ))
 
 final case class MetadataDB(private val db: AerospikeClient) extends AerospikeHandler(db):
@@ -100,8 +102,8 @@ final case class MetadataDB(private val db: AerospikeClient) extends AerospikeHa
 
   private val readPolicy = new Policy()
 
-  def getSong(id: Long): IO[Option[SongMetadata]] =
-    val key = Key(StorageConstants.MetadataNamespace, StorageConstants.MetadataSet, id)
+  def getSong(id: SongId): IO[Option[SongMetadata]] =
+    val key = Key(StorageConstants.MetadataNamespace, StorageConstants.MetadataSet, id.value)
     IO(Option(db.get(readPolicy, key)))
       .map(_.map(_.bins.asScala.map(_.bimap(identity, _.toString)).toMap))
       .map(_.map(SongMetadata(_)))

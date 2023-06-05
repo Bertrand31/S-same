@@ -96,8 +96,4 @@ It is then highly unlikely for it to become a bottleneck. And even if it somehow
 
 ## Aerospike cheatsheet
 
-    <!-- docker build -t sesame:0.1 .
-    docker run -dp 3000:3000 sesame:0.1
-    docker exec -it (docker ps -a -q | head -n1) /bin/bash
-    docker restart (docker ps -a -q | head -n1) -->
     docker run -v /home/bertrand/Code/sésame/aerospike_conf:/opt/aerospike/etc/ -p 3000-3002:3000-3002 aerospike:ce-6.3.0.4_1 --config-file /opt/aerospike/etc/aerospike.conf  --early-verbose

@@ -28,7 +28,7 @@ class StorageSpec extends AnyFlatSpec with should.Matchers with AerospikeDocker:
       _           <- footprintDB.release
       _           <- metadataDB.release
     } yield idxHashes.zip(matches).foreach({
-      case ((_, idx), Some((matchIdx, _))) => idx shouldBe matchIdx
+      case ((_, idx), Some((_, matchIdx))) => idx shouldBe matchIdx
       case _ => throw new Error()
     })
 
