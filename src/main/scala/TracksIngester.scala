@@ -21,7 +21,7 @@ object TracksIngester extends IOApp:
       _           <- FileUtils.writeComplexToFile(new File(s"data/footprintData/$songName.csv"), footprint)
     } yield ()
 
-  private def processAndStoreSong(audioFile: File)(
+  def processAndStoreSong(audioFile: File)(
       using footprintsDB: FootprintDB,
       metadataDB: MetadataDB,
   ): IO[Unit] =

@@ -50,7 +50,7 @@ final case class FootprintDB(private val db: AerospikeClient) extends AerospikeH
   def storeSong(songId: Int, footprint: ArraySeq[Long]): IO[Unit] =
     footprint.zipWithIndex.traverse_({
       case (hash, index) =>
-        val data = BigInt(shortToByteArray(index.toShort) ++ intToByteArray(songId)).toLong
+        val data = shortToByteArray(index.toShort) ++ intToByteArray(songId)
         val key = Key(StorageConstants.FooprintNamespace, StorageConstants.FootprintSet, hash)
         val value = Bin(StorageConstants.FootprintBin, data)
         IO(db.put(writePolicy, key, value))
@@ -62,7 +62,7 @@ final case class FootprintDB(private val db: AerospikeClient) extends AerospikeH
     val key = Key(StorageConstants.FooprintNamespace, StorageConstants.FootprintSet, hash)
     IO(Option(db.get(readPolicy, key)))
       .map(_.map(record =>
-        val bytes = BigInt(record.getLong(StorageConstants.FootprintBin)).toByteArray
+        val bytes = record.getValue(StorageConstants.FootprintBin).asInstanceOf[Array[Byte]]
         val (idxBytes, songIdBytes) = bytes.splitAt(2)
         (byteArrayToShort(idxBytes), byteArrayToInt(songIdBytes))
       ))
