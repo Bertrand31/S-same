@@ -1,8 +1,8 @@
-package sesame
+package sesame.audio
 
 import javax.sound.sampled.AudioFormat
 
-object Commons:
+object AudioCommons:
 
   val ChunkSize = 4096
 

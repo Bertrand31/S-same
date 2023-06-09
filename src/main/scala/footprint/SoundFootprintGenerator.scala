@@ -1,4 +1,4 @@
-package sesame
+package sesame.footprint
 
 import scala.collection.immutable.ArraySeq
 import org.apache.commons.math3.complex.Complex

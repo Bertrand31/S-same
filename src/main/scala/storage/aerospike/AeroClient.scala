@@ -1,4 +1,4 @@
-package sesame
+package sesame.storage.aerospike
 
 import scala.collection.immutable.ArraySeq
 import scala.jdk.CollectionConverters.MapHasAsScala
@@ -8,7 +8,9 @@ import com.aerospike.client._
 import com.aerospike.client.policy._
 import com.aerospike.client.policy.{Policy, WritePolicy}
 import com.aerospike.client.policy.GenerationPolicy
-import utils.MathUtils._
+import sesame.utils.MathUtils._
+import sesame.types.{SongId, SongMetadata}
+import sesame.storage.{FootprintClient, MetadataClient}
 
 class AeroClient(private val client: AerospikeClient) extends MetadataClient with FootprintClient:
 

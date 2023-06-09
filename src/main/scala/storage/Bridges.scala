@@ -1,7 +1,8 @@
-package sesame
+package sesame.storage
 
 import scala.collection.immutable.ArraySeq
 import cats.effect.IO
+import sesame.types.{SongId, SongMetadata}
 
 trait MetadataClient:
 

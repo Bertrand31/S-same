@@ -1,4 +1,4 @@
-package sesame.utils
+package `sesame.audio`.utils
 
 import java.io.{File, PrintWriter}
 import cats.effect._

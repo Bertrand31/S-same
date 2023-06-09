@@ -1,6 +1,6 @@
-package sesame
+package sesame.types
 
-import utils.MathUtils.roundToTwoPlaces
+import sesame.utils.MathUtils.roundToTwoPlaces
 
 final case class SongMatch(
   songId: SongId,

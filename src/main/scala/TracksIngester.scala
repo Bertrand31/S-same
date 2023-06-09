@@ -2,8 +2,10 @@ package sesame
 
 import java.io.File
 import cats.implicits._
-import cats.effect._
-import utils.{MetadataUtils, FileUtils}
+import cats.effect.{IO, IOApp, ExitCode}
+import sesame.utils.{MetadataUtils, FileUtils}
+import sesame.storage._, aerospike.AeroClient
+import sesame.footprint.SoundFootprintGenerator
 
 object TracksIngester extends IOApp:
 

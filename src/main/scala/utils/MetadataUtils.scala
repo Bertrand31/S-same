@@ -5,7 +5,7 @@ import scala.jdk.CollectionConverters._
 import scala.util.chaining.scalaUtilChainingOps
 import cats.effect.IO
 import org.jaudiotagger.audio.wav.WavTagReader
-import sesame.SongMetadata
+import sesame.types.SongMetadata
 
 object MetadataUtils:
 

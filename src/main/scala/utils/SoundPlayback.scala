@@ -3,10 +3,9 @@ package sesame.utils
 import java.io._
 import javax.sound.sampled._
 import cats.effect.IO
+import sesame.audio.AudioCommons.InputFormat
 
 object SoundPlayback:
-
-  import sesame.Commons.InputFormat
 
   def playWavByteArray(inputData: Array[Byte]): IO[Unit] =
     IO {

@@ -2,7 +2,10 @@ package sesame
 
 import scala.collection.immutable.ArraySeq
 import cats.implicits._
-import cats.effect._
+import cats.effect.{IO, IOApp, ExitCode}
+import sesame.storage._, aerospike.AeroClient
+import sesame.types.{SongMatch, SongMetadata, SongId}
+import sesame.footprint.SoundFootprintGenerator
 
 object Sésame extends IOApp:
 

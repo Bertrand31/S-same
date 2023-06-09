@@ -1,4 +1,4 @@
-package sesame
+package sesame.storage.aerospike
 
 object AerospikeConstants:
 

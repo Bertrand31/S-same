@@ -3,10 +3,9 @@ package sesame.utils
 import java.io._
 import javax.sound.sampled._
 import cats.effect.IO
+import sesame.audio.AudioCommons.InputFormat
 
 object WavUtils:
-
-  import sesame.Commons.InputFormat
 
   def writeToFile(inputData: Array[Byte]): IO[Unit] =
     IO {

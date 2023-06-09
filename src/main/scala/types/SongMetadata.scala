@@ -1,4 +1,4 @@
-package sesame
+package sesame.types
 
 final case class SongMetadata(private val inner: Map[String, String]):
 
