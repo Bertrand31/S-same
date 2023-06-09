@@ -11,36 +11,7 @@ import com.aerospike.client.policy.GenerationPolicy
 import com.aerospike.client.cdt._
 import utils.MathUtils._
 
-object AerospikeConstants:
-
-  val MetadataNamespace = "metadata"
-  val MetadataSet = "metadata"
-
-  // Collocated with metadata because of Aerospike CE's limitation to 2 namespaces
-  val IDNamespace = MetadataNamespace
-  val IDSet = "ids"
-  val IDDefaultRecord = "song-id"
-  val SingleCounterBin = "id-bin"
-
-  val FooprintNamespace = "footprint"
-  val FootprintSet = null // we don't need sets. Not using a set name saves overhead on every record
-  val FootprintBin = "" // single-bin namespace implies empty bin name
-
-trait MetadataClient:
-
-  def storeSongMetadata(metadata: SongMetadata): IO[SongId]
-
-  def getSongMetadata(id: SongId): IO[Option[SongMetadata]]
-
-trait FootprintClient:
-
-  def storeSongFootprint(songId: SongId, footprint: ArraySeq[(Long, Int)]): IO[Unit]
-
-  def lookupFootprintHash(hash: Long): IO[Option[(SongId, Short)]]
-
-final case class AeroClient(private val client: AerospikeClient)
-  extends MetadataClient
-  with FootprintClient:
+class AeroClient(private val client: AerospikeClient) extends MetadataClient with FootprintClient:
 
   private val metadataWritePolicy = new WritePolicy()
   metadataWritePolicy.sendKey = false // Doesn't store keys, only their digests

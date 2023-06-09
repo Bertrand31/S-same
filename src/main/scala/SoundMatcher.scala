@@ -4,7 +4,6 @@ import scala.util.{Failure, Success}
 import scala.collection.immutable.ArraySeq
 import cats.implicits._
 import cats.effect._
-import utils.MathUtils.roundToTwoPlaces
 
 object Sésame extends IOApp:
 
@@ -59,13 +58,6 @@ object Sésame extends IOApp:
       .map(rankMatches(footprint.size))
       .flatMap(formatMatches)
 
-  private def formatMatch(matchingSong: SongMatch): String =
-    val songName = matchingSong.songData.getTitle
-    val artist = matchingSong.songData.getArtist
-    s"==> $artist - $songName <==".padTo(30, '=') ++ "\n" ++
-    s"- Hashes matching at ${roundToTwoPlaces(matchingSong.matchPercentage)}%\n" ++
-    s"- Linearity matching at: ${roundToTwoPlaces(matchingSong.linearityMatchPercentage)}%\n"
-
   def run(args: List[String]): IO[ExitCode] =
     AeroClient.setup.use(aeroClient =>
       given AeroClient = aeroClient
@@ -77,7 +69,7 @@ object Sésame extends IOApp:
                               case ArraySeq() => IO.println("NO MATCH FOUND")
                               case matches =>
                                 IO.println("\nFOUND:\n") *>
-                                IO.println(matches.map(formatMatch).mkString("\n") ++ "\n")
+                                IO.println(matches.mkString("\n") ++ "\n")
       } yield ExitCode.Success
     )
 

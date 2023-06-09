@@ -1,21 +1,12 @@
 package sesame.utils
 
-import javax.swing._
 import javax.imageio.ImageIO
 import java.awt._
-import java.awt.geom._
-import java.awt.image.BufferedImage
-import java.awt.{Graphics2D,Color,Font,BasicStroke}
-import java.awt.geom._
-import javax.swing.JComponent
-import java.awt.image.BufferedImage
-import javax.swing.JFrame
 import java.awt.Color
+import java.awt.image.BufferedImage
 import org.apache.commons.math3.complex.Complex
 
 object Visualisation:
-
-  import sesame.Commons.InputFormat
 
   def visualiseSpectrogram(results: Array[Array[Complex]]): Unit =
     val size = (500, 500)
@@ -26,7 +17,6 @@ object Visualisation:
     g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
     results.zipWithIndex.foreach({
       case (row, index) =>
-        val size = row.size /// TODO ????
         var freq = 1
         for (line <- (1 to 500)) {
           // To get the magnitude of the sound at a given frequency slice

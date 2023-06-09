@@ -21,8 +21,11 @@ object SoundFootprintGenerator:
 
   private val FuzFactor = 2
 
-  private def hash(peaks: Array[Long]): Long =
-    MurmurHash3.stringHash(peaks.mkString("|"))
+  private def hash(p1: Long, p2: Long, p3: Long, p4: Long): Long =
+    (p4 - (p4 % FuzFactor)) * 100_000_000 +
+    (p3 - (p3 % FuzFactor)) * 100_000 +
+    (p2 - (p2 % FuzFactor)) * 100 +
+    (p1 - (p1 % FuzFactor))
 
   private def getIndex(freq: Int): Int =
     Range.indexWhere(_ >= freq)
@@ -40,8 +43,8 @@ object SoundFootprintGenerator:
           recordPoints.update(index, freq)
         }
       )
-      // WARNING: discarding last point
-      hash(recordPoints.init)
+      // WARNING: discarding first point
+      hash(recordPoints(1), recordPoints(2), recordPoints(3), recordPoints(4))
     ).to(ArraySeq)
 
   val transform: Iterator[Array[Byte]] => ArraySeq[Long] =

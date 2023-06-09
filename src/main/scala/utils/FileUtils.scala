@@ -1,7 +1,6 @@
 package sesame.utils
 
 import java.io.File
-import java.nio.file.{Files, Paths}
 import cats.effect._
 import org.apache.commons.math3.complex.Complex
 

@@ -27,6 +27,7 @@ scalacOptions ++= Seq(
   "-feature", // Emit warning and location for usages of features that should be imported explicitly
   "-language:existentials", // Existential types (besides wildcard types) can be written and inferred
   "-language:higherKinds", // Allow higher-kinded types
+  "-Wunused:all",
   "-unchecked", // Enable additional warnings where generated code depends on assumptions
 )
 

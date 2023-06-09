@@ -10,6 +10,18 @@ import cats.implicits._
 import cats.effect.IO
 import com.aerospike.client._
 
+trait MetadataClient:
+
+  def storeSongMetadata(metadata: SongMetadata): IO[SongId]
+
+  def getSongMetadata(id: SongId): IO[Option[SongMetadata]]
+
+trait FootprintClient:
+
+  def storeSongFootprint(songId: SongId, footprint: ArraySeq[(Long, Int)]): IO[Unit]
+
+  def lookupFootprintHash(hash: Long): IO[Option[(SongId, Short)]]
+
 object FootprintBridge:
 
   def storeSong(songId: SongId, footprint: ArraySeq[Long])(
