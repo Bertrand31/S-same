@@ -5,7 +5,6 @@ import flatspec._
 import matchers._
 
 import java.io.File
-import scala.util.Random
 
 class SoundFootprintGeneratorSpec extends AnyFlatSpec with should.Matchers with AerospikeDocker {
   self: Suite =>

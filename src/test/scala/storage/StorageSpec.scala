@@ -15,7 +15,6 @@ class StorageSpec extends AnyFlatSpec with should.Matchers with AerospikeDocker:
   "Aerospike" should "correctly store and retrieve hashes from storage" in {
 
     val hashes = ArraySeq(123, 456, 789, Long.MaxValue, 0)
-    val songName = "Test Song"
 
     Thread.sleep(2000)
 
