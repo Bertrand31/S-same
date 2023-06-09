@@ -1,7 +1,7 @@
-package `sesame.audio`.utils
+package sesame.utils
 
 import java.io.{File, PrintWriter}
-import cats.effect._
+import cats.effect.IO
 import org.apache.commons.math3.complex.Complex
 
 object FileTestUtils:

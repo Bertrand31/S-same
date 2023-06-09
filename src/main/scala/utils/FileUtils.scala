@@ -5,7 +5,6 @@ import cats.effect.IO
 
 object FileUtils:
 
-
   def getFilesIn(path: String): IO[List[File]] =
     val dir = new File(path)
     if (!dir.exists)

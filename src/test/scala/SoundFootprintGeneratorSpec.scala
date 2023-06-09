@@ -5,6 +5,10 @@ import flatspec._
 import matchers._
 
 import java.io.File
+import sesame.types.SongId
+import sesame.footprint.SoundFootprintGenerator
+import sesame.storage.FootprintBridge
+import sesame.storage.aerospike.AeroClient
 
 class SoundFootprintGeneratorSpec extends AnyFlatSpec with should.Matchers with AerospikeDocker {
   self: Suite =>

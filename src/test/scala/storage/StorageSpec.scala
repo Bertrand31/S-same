@@ -7,6 +7,9 @@ import matchers._
 import scala.collection.immutable.ArraySeq
 import cats.implicits._
 import cats.effect._
+import sesame.types.SongId
+import sesame.storage.FootprintBridge
+import sesame.storage.aerospike.AeroClient
 
 class StorageSpec extends AnyFlatSpec with should.Matchers with AerospikeDocker:
 
