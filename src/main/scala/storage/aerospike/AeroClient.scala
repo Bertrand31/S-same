@@ -3,7 +3,7 @@ package sesame.storage.aerospike
 import scala.collection.immutable.ArraySeq
 import scala.jdk.CollectionConverters.MapHasAsScala
 import cats.implicits._
-import cats.effect._
+import cats.effect.{IO, Resource}
 import com.aerospike.client._
 import com.aerospike.client.policy._
 import com.aerospike.client.policy.{Policy, WritePolicy}
@@ -38,7 +38,11 @@ class AeroClient(private val client: AerospikeClient) extends MetadataClient wit
         Operation.get(AerospikeConstants.SingleCounterBin),
       )
     }.map(_.getInt(AerospikeConstants.SingleCounterBin)).map(SongId(_)).flatMap(songId =>
-      val key = Key(AerospikeConstants.MetadataNamespace, AerospikeConstants.MetadataSet, songId.value)
+      val key = Key(
+        AerospikeConstants.MetadataNamespace,
+        AerospikeConstants.MetadataSet,
+        songId.value,
+      )
       val bins = metadata.toMap.map({
         case (metaKey, metaVal) => Bin(metaKey, metaVal)
       }).toArray
@@ -62,7 +66,7 @@ class AeroClient(private val client: AerospikeClient) extends MetadataClient wit
   def storeSongFootprint(songId: SongId, footprint: ArraySeq[(Long, Int)]): IO[Unit] =
     footprint.traverse_({
       case (hash, index) =>
-        val data = shortToByteArray(index.toShort) ++ intToByteArray(songId.value)
+        val data = toPaddedBytesArray(index.toShort) ++ toPaddedBytesArray(songId.value)
         val key = Key(AerospikeConstants.FooprintNamespace, AerospikeConstants.FootprintSet, hash)
         val value = Bin(AerospikeConstants.FootprintBin, data)
         IO(client.put(footprintWritePolicy, key, value))
