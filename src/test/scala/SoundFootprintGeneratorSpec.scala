@@ -19,15 +19,15 @@ class SoundFootprintGeneratorSpec extends AnyFlatSpec with should.Matchers with 
     Thread.sleep(2000)
 
     val resultsIO =
-      for {
-        given AeroClient <- AeroClient.setup
-        audioChunks      <- WavLoader.wavToByteChunks(audioFile)
-        footprint         = SoundFootprintGenerator.transform(audioChunks)
-        _                <- FootprintBridge.storeSong(SongId(123456), footprint)
-        results          <- Sésame.getMatchingSongs(footprint)
-        // _                <- footprintDB.release
-        // _                <- metadataDB.release
-      } yield results
+      AeroClient.setup.use(aeroClient =>
+        given AeroClient = aeroClient
+        for {
+          audioChunks      <- WavLoader.wavToByteChunks(audioFile)
+          footprint         = SoundFootprintGenerator.transform(audioChunks)
+          _                <- FootprintBridge.storeSong(SongId(123456), footprint)
+          results          <- Sésame.getMatchingSongs(footprint)
+        } yield results
+      )
 
     val expected = List("==> foobar <==================\n- Hashes matching at 100.0%\n- Linearity matching at: 99.44%\n")
     resultsIO.unsafeRunSync() shouldBe expected

@@ -67,15 +67,17 @@ object Sésame extends IOApp:
     s"- Linearity matching at: ${roundToTwoPlaces(matchingSong.linearityMatchPercentage)}%\n"
 
   def run(args: List[String]): IO[ExitCode] =
-    for {
-      given AeroClient <- AeroClient.setup
-      audioChunks      <- MicRecorder.recordChunks
-      footprint        =  SoundFootprintGenerator.transform(audioChunks)
-      results          <- getMatchingSongs(footprint)
-      _                <- results match
-                            case ArraySeq() => IO.println("NO MATCH FOUND")
-                            case matches =>
-                              IO.println("\nFOUND:\n") *>
-                              IO.println(matches.map(formatMatch).mkString("\n") ++ "\n")
-    } yield ExitCode.Success
+    AeroClient.setup.use(aeroClient =>
+      given AeroClient = aeroClient
+      for {
+        audioChunks      <- MicRecorder.recordChunks
+        footprint        =  SoundFootprintGenerator.transform(audioChunks)
+        results          <- getMatchingSongs(footprint)
+        _                <- results match
+                              case ArraySeq() => IO.println("NO MATCH FOUND")
+                              case matches =>
+                                IO.println("\nFOUND:\n") *>
+                                IO.println(matches.map(formatMatch).mkString("\n") ++ "\n")
+      } yield ExitCode.Success
+    )
 

@@ -36,9 +36,10 @@ object TracksIngester extends IOApp:
   private val ParallelismLevel = 5
 
   def run(args: List[String]): IO[ExitCode] =
-    for {
-      given AeroClient <- AeroClient.setup
-      audioFiles       <- FileUtils.getFilesIn(InputSongsDirectory)
-      _                <- IO.parTraverseN(ParallelismLevel)(audioFiles)(processAndStoreSong)
-      // _               <- audioFiles.traverse_(debug)
-    } yield ExitCode.Success
+    AeroClient.setup.use(aeroClient =>
+      given AeroClient = aeroClient
+      FileUtils.getFilesIn(InputSongsDirectory)
+        .flatMap(IO.parTraverseN(ParallelismLevel)(_)(processAndStoreSong))
+        .as(ExitCode.Success)
+    )
+        // _               <- audioFiles.traverse_(debug)

@@ -105,12 +105,12 @@ final case class AeroClient(private val client: AerospikeClient)
         (SongId(byteArrayToInt(songIdBytes)), byteArrayToShort(idxBytes))
       ))
 
-  // TODO: Ressource pattern
-  // def release: IO[Unit] = IO { db.close() }
+  def release: IO[Unit] = IO { client.close() }
 
 object AeroClient:
 
-  def setup: IO[AeroClient] =
-    IO {
-      new AerospikeClient("0.0.0.0", 3000)
-    }.map(new AeroClient(_))
+  def setup: Resource[IO, AeroClient] =
+    Resource.make(
+      IO(new AerospikeClient("0.0.0.0", 3000))
+        .map(new AeroClient(_))
+    )(_.release)

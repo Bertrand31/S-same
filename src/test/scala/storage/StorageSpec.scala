@@ -19,17 +19,19 @@ class StorageSpec extends AnyFlatSpec with should.Matchers with AerospikeDocker:
 
     Thread.sleep(2000)
 
-    val test = for {
-      given AeroClient <- AeroClient.setup
-      _                <- FootprintBridge.storeSong(SongId(123456), hashes)
-      idxHashes        =  hashes.zipWithIndex
-      matches          <- idxHashes.traverse({ case (hash, _) => FootprintBridge.lookupHash(hash) })
-      // _                <- footprintDB.release
-      // _                <- metadataDB.release
-    } yield idxHashes.zip(matches).foreach({
-      case ((_, idx), Some((_, matchIdx))) => idx shouldBe matchIdx
-      case _ => throw new Error()
-    })
+    val test =
+      AeroClient.setup.use(aeroClient =>
+        given AeroClient = aeroClient
+        for {
+          _                <- FootprintBridge.storeSong(SongId(123456), hashes)
+          idxHashes        =  hashes.zipWithIndex
+          matches          <- idxHashes
+                                .traverse({ case (hash, _) => FootprintBridge.lookupHash(hash) })
+        } yield idxHashes.zip(matches).foreach({
+          case ((_, idx), Some((_, matchIdx))) => idx shouldBe matchIdx
+          case _ => throw new Error()
+        })
+    )
 
     test.unsafeRunSync()
   }
