@@ -4,22 +4,14 @@ import scala.util.{Failure, Success}
 import scala.collection.immutable.ArraySeq
 import cats.implicits._
 import cats.effect._
-import utils.SongMetadata
 import utils.MathUtils.roundToTwoPlaces
 
 object Sésame extends IOApp:
 
-  final case class SongMatch(
-    songId: SongId,
-    songData: SongMetadata,
-    matchPercentage: Float,
-    linearityMatchPercentage: Float,
-  )
-
   def findCorrespondingHashes(footprint: ArraySeq[Long])(
-      using footprintDB: FootprintDB,
+      using FootprintClient,
   ): IO[ArraySeq[(SongId, Int)]] =
-    IO.parTraverseN(10)(footprint)(footprintDB.lookupHash).map(
+    IO.parTraverseN(10)(footprint)(FootprintBridge.lookupHash).map(
       _
         .zipWithIndex
         .collect({
@@ -46,20 +38,21 @@ object Sésame extends IOApp:
 
   private val MaxResults = 5
 
-  def formatMatches(matches: ArraySeq[(SongId, Float, Float)])(using metadataDB: MetadataDB): IO[ArraySeq[SongMatch]] =
+  def formatMatches(matches: ArraySeq[(SongId, Float, Float)])(
+      using MetadataClient,
+  ): IO[ArraySeq[SongMatch]] =
     matches
       .take(MaxResults)
       .traverse({
         case (songId, matchPct, linearityPct) =>
-          metadataDB.getSong(songId).flatMap({
-            case None => IO.raiseError(new Error(s"No metadata for song ID $songId"))
+          MetadataBridge.getSong(songId).flatMap({
+            case None => IO.raiseError(new Error(s"No metadata for song ID ${songId.value}"))
             case Some(metadata) => IO.pure(SongMatch(songId, metadata, matchPct, linearityPct))
           })
       })
 
   def getMatchingSongs(footprint: ArraySeq[Long])(
-      using footprintDB: FootprintDB,
-      metadataDB: MetadataDB,
+      using FootprintClient, MetadataClient
   ): IO[ArraySeq[SongMatch]] =
     findCorrespondingHashes(footprint)
       .map(groupOffsetsBySong)
@@ -75,15 +68,14 @@ object Sésame extends IOApp:
 
   def run(args: List[String]): IO[ExitCode] =
     for {
-      databaseHandles <- Storage.setup
-      (given FootprintDB, given MetadataDB) = databaseHandles
-      audioChunks     <- MicRecorder.recordChunks
-      footprint       =  SoundFootprintGenerator.transform(audioChunks)
-      results         <- getMatchingSongs(footprint)
-      _               <- results match
-                           case ArraySeq() => IO.println("NO MATCH FOUND")
-                           case matches =>
-                             IO.println("\nFOUND:\n") *>
-                             IO.println(matches.map(formatMatch).mkString("\n") ++ "\n")
+      given AeroClient <- AeroClient.setup
+      audioChunks      <- MicRecorder.recordChunks
+      footprint        =  SoundFootprintGenerator.transform(audioChunks)
+      results          <- getMatchingSongs(footprint)
+      _                <- results match
+                            case ArraySeq() => IO.println("NO MATCH FOUND")
+                            case matches =>
+                              IO.println("\nFOUND:\n") *>
+                              IO.println(matches.map(formatMatch).mkString("\n") ++ "\n")
     } yield ExitCode.Success
 

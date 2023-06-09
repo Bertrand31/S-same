@@ -5,20 +5,7 @@ import scala.jdk.CollectionConverters._
 import scala.util.chaining.scalaUtilChainingOps
 import cats.effect.IO
 import org.jaudiotagger.audio.wav.WavTagReader
-
-final case class SongMetadata(private val inner: Map[String, String]):
-
-  val get = inner.get
-  val getOrElse = inner.getOrElse
-  def toMap = inner
-
-  def getTitle: String = getOrElse(SongMetadata.SongTitleKey, "Unknown")
-  def getArtist: String = getOrElse(SongMetadata.ArtistKey, "Unknown")
-
-object SongMetadata:
-
-  val SongTitleKey = "TITLE"
-  val ArtistKey = "ARTIST"
+import sesame.SongMetadata
 
 object MetadataUtils:
 

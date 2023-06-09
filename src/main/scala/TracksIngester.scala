@@ -22,23 +22,23 @@ object TracksIngester extends IOApp:
     } yield ()
 
   def processAndStoreSong(audioFile: File)(
-      using footprintsDB: FootprintDB,
-      metadataDB: MetadataDB,
+      using FootprintClient, MetadataClient,
   ): IO[Unit] =
     for {
       metadata    <- MetadataUtils.getWavMetadata(audioFile)
-      songId      <- metadataDB.storeSong(metadata)
+      songId      <- MetadataBridge.storeSong(metadata)
       audioChunks <- WavLoader.wavToByteChunks(audioFile)
       footprint    = SoundFootprintGenerator.transform(audioChunks)
-      _           <- footprintsDB.storeSong(songId, footprint)
+      _           <- FootprintBridge.storeSong(songId, footprint)
       _           <- IO.println(s"${metadata.getTitle} was ingested successfuly")
     } yield ()
 
+  private val ParallelismLevel = 5
+
   def run(args: List[String]): IO[ExitCode] =
     for {
-      databaseHandles                       <- Storage.setup
-      (given FootprintDB, given MetadataDB) =  databaseHandles
-      audioFiles                            <- FileUtils.getFilesIn(InputSongsDirectory)
-      _                                     <- IO.parTraverseN(5)(audioFiles)(processAndStoreSong)
-      // _                                  <- audioFiles.traverse_(debug)
+      given AeroClient <- AeroClient.setup
+      audioFiles       <- FileUtils.getFilesIn(InputSongsDirectory)
+      _                <- IO.parTraverseN(ParallelismLevel)(audioFiles)(processAndStoreSong)
+      // _               <- audioFiles.traverse_(debug)
     } yield ExitCode.Success

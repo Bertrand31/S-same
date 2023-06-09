@@ -21,11 +21,10 @@ class TracksIngesterSpec extends AnyFlatSpec with should.Matchers with Aerospike
     Thread.sleep(2000)
 
     val test = for {
-      databaseHandles           <- Storage.setup
-      (footprintDB, metadataDB) = databaseHandles
-      _           <- TracksIngester.processAndStoreSong(new File("./data/processedFiles/01. Strangers By Nature.wav"))(using footprintDB, metadataDB)
-      _           <- footprintDB.release
-      _           <- metadataDB.release
+      given AeroClient <- AeroClient.setup
+      _                <- TracksIngester.processAndStoreSong(new File("./data/processedFiles/01. Strangers By Nature.wav"))
+      // _           <- footprintDB.release
+      // _           <- metadataDB.release
     } yield ()
 
     test.unsafeRunSync()
