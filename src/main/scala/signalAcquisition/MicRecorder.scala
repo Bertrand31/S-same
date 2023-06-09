@@ -1,7 +1,6 @@
 package sesame
 
-import java.io.ByteArrayOutputStream
-import javax.sound.sampled.{AudioFormat, AudioSystem}
+import javax.sound.sampled.AudioSystem
 import cats.effect.IO
 
 object MicRecorder:

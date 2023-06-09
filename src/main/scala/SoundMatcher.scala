@@ -1,6 +1,5 @@
 package sesame
 
-import scala.util.{Failure, Success}
 import scala.collection.immutable.ArraySeq
 import cats.implicits._
 import cats.effect._

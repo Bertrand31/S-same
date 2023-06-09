@@ -1,14 +1,7 @@
 package sesame
 
-import java.util.{ArrayList, Arrays}
-import java.io.File
-import java.nio.charset.StandardCharsets.UTF_8
-import scala.math.BigInt
 import scala.collection.immutable.ArraySeq
-import scala.jdk.CollectionConverters.MapHasAsScala
-import cats.implicits._
 import cats.effect.IO
-import com.aerospike.client._
 
 trait MetadataClient:
 

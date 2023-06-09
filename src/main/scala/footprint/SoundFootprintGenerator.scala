@@ -3,7 +3,6 @@ package sesame
 import scala.collection.immutable.ArraySeq
 import org.apache.commons.math3.complex.Complex
 import org.apache.commons.math3.transform.{DftNormalization, FastFourierTransformer, TransformType}
-import scala.util.hashing.MurmurHash3
 
 object SoundFootprintGenerator:
 

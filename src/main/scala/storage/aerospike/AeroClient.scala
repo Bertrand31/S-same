@@ -8,7 +8,6 @@ import com.aerospike.client._
 import com.aerospike.client.policy._
 import com.aerospike.client.policy.{Policy, WritePolicy}
 import com.aerospike.client.policy.GenerationPolicy
-import com.aerospike.client.cdt._
 import utils.MathUtils._
 
 class AeroClient(private val client: AerospikeClient) extends MetadataClient with FootprintClient:
