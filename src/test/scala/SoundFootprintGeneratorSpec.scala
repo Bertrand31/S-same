@@ -1,6 +1,6 @@
 package sesame
 
-import org.scalatest._, flatspec._, matchers._
+import org.scalatest._, flatspec._, matchers._, matchers.should.Matchers._
 
 import java.io.File
 import scala.collection.immutable.ArraySeq
@@ -9,7 +9,7 @@ import sesame.footprint.SoundFootprintGenerator
 import sesame.storage.FootprintBridge
 import sesame.storage.aerospike.AeroClient
 
-class SoundFootprintGeneratorSpec extends AnyFlatSpec with should.Matchers with AerospikeDocker {
+class SoundFootprintGeneratorSpec extends AnyFlatSpec with AerospikeDocker {
   self: Suite =>
 
   import cats.effect.unsafe.implicits.global
@@ -27,14 +27,22 @@ class SoundFootprintGeneratorSpec extends AnyFlatSpec with should.Matchers with 
           audioChunks      <- WavLoader.wavToByteChunks(audioFile)
           footprint         = SoundFootprintGenerator.transform(audioChunks)
           _                <- FootprintBridge.storeSong(SongId(123456), footprint)
-          corresponding    <- SoundMatcher.findCorrespondingHashes(footprint)
+          gatheredSample    = footprint.drop(footprint.size / 3).take(footprint.size / 10)
+          corresponding    <- SoundMatcher.findCorrespondingHashes(gatheredSample)
           groupedCorr       = SoundMatcher.groupOffsetsBySong(corresponding)
-          rankedMatches     = SoundMatcher.rankMatches(footprint.size)(groupedCorr)
-        } yield rankedMatches
+          rankedMatches     = SoundMatcher.rankMatches(gatheredSample.size)(groupedCorr)
+        } yield (corresponding, groupedCorr, rankedMatches)
       )
 
-    val expected = ArraySeq((SongId(123456), 100.0f, 3.9775624f)) // TODO: figure out the 3.9
-    val results = resultsIO.unsafeRunSync()
-    results should contain theSameElementsInOrderAs expected
+    val (corresponding, groupedCorr, rankedMatches) = resultsIO.unsafeRunSync()
+
+    groupedCorr.map(_._1) should contain theSameElementsAs List(SongId(123456))
+
+    // Linearity not matching at 100% because of hash collisions
+    rankedMatches match
+      case ArraySeq((SongId(123456), 100f, linearity)) =>
+        linearity should be > (99f)
+      case result => throw new Exception(s"Incorrect match: $result")
+
   }
 }

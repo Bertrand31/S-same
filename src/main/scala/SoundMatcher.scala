@@ -4,34 +4,38 @@ import scala.collection.immutable.ArraySeq
 import cats.implicits._
 import cats.effect.{IO, IOApp, ExitCode}
 import sesame.storage._, aerospike.AeroClient
-import sesame.types.{SongMatch, SongMetadata, SongId}
+import sesame.types.{SongMatch, SongMetadata, SongId, TimeOffset}
 import sesame.footprint.SoundFootprintGenerator
 
 object SoundMatcher extends IOApp:
 
   def findCorrespondingHashes(footprint: ArraySeq[Long])(
       using FootprintClient,
-  ): IO[ArraySeq[(SongId, Int)]] =
+  ): IO[ArraySeq[(SongId, TimeOffset)]] =
     IO.parTraverseN(10)(footprint)(FootprintBridge.lookupHash).map(
       _
         .zipWithIndex
         .collect({
           case (Some((songId, indexInSong)), indexInFootprint) =>
-            (songId, indexInSong - indexInFootprint)
+            (songId, TimeOffset(indexInSong - indexInFootprint))
         })
     )
 
-  val groupOffsetsBySong: ArraySeq[(SongId, Int)] => ArraySeq[(SongId, ArraySeq[Int])] =
-    _
+  def groupOffsetsBySong(
+      offsets: ArraySeq[(SongId, TimeOffset)]
+  ): ArraySeq[(SongId, ArraySeq[TimeOffset])] =
+    offsets
       .groupMap(_._1)(_._2)
       .to(ArraySeq)
 
-  def rankMatches(footprintSize: Int): ArraySeq[(SongId, ArraySeq[Int])] => ArraySeq[(SongId, Float, Float)] =
+  def rankMatches(
+      footprintSize: Int
+  ): ArraySeq[(SongId, ArraySeq[TimeOffset])] => ArraySeq[(SongId, Float, Float)] =
     _
       .map({
-        case (songId, deltas) =>
-          val matchPct = deltas.size * 100 / footprintSize.toFloat
-          val deltaHistogram = deltas.groupMapReduce(identity)(_ => 1)(_ + _)
+        case (songId, offsets) =>
+          val matchPct = offsets.size * 100 / footprintSize.toFloat
+          val deltaHistogram = offsets.groupMapReduce(_.value)(_ => 1)(_ + _)
           val linearityPct = (deltaHistogram.values.max * 100) / footprintSize.toFloat
           (songId, matchPct, linearityPct)
       })
