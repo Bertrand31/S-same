@@ -69,14 +69,12 @@ object SoundMatcher extends IOApp:
     AeroClient.setup.use(aeroClient =>
       given AeroClient = aeroClient
       for {
-        audioChunks      <- MicRecorder.recordChunks
-        footprint        =  SoundFootprintGenerator.transform(audioChunks)
-        results          <- getMatchingSongs(footprint)
-        _                <- results match
-                              case ArraySeq() => IO.println("NO MATCH FOUND")
-                              case matches =>
-                                IO.println("\nFOUND:\n") *>
-                                IO.println(matches.mkString("\n") ++ "\n")
+        audioChunks <- MicRecorder.recordChunks
+        footprint   =  SoundFootprintGenerator.transform(audioChunks)
+        results     <- getMatchingSongs(footprint)
+        _           <- results match
+                         case ArraySeq() => IO.println("NO MATCH FOUND")
+                         case matches => IO.println(s"\nFOUND:\n${matches.mkString("\n")}\n")
       } yield ExitCode.Success
     )
 
