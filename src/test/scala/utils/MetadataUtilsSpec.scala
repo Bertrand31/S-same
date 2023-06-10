@@ -1,8 +1,6 @@
 package sesame
 
-import org.scalatest._
-import flatspec._
-import matchers._
+import org.scalatest._, flatspec._, matchers._
 
 import java.io.File
 import sesame.utils.MetadataUtils

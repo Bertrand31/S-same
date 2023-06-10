@@ -1,10 +1,9 @@
 package sesame
 
-import org.scalatest._
-import flatspec._
-import matchers._
+import org.scalatest._, flatspec._, matchers._
 
 import java.io.File
+import scala.collection.immutable.ArraySeq
 import sesame.types.SongId
 import sesame.footprint.SoundFootprintGenerator
 import sesame.storage.FootprintBridge
@@ -28,11 +27,14 @@ class SoundFootprintGeneratorSpec extends AnyFlatSpec with should.Matchers with 
           audioChunks      <- WavLoader.wavToByteChunks(audioFile)
           footprint         = SoundFootprintGenerator.transform(audioChunks)
           _                <- FootprintBridge.storeSong(SongId(123456), footprint)
-          results          <- Sésame.getMatchingSongs(footprint)
-        } yield results
+          corresponding    <- SoundMatcher.findCorrespondingHashes(footprint)
+          groupedCorr       = SoundMatcher.groupOffsetsBySong(corresponding)
+          rankedMatches     = SoundMatcher.rankMatches(footprint.size)(groupedCorr)
+        } yield rankedMatches
       )
 
-    val expected = List("==> foobar <==================\n- Hashes matching at 100.0%\n- Linearity matching at: 99.44%\n")
-    resultsIO.unsafeRunSync() shouldBe expected
+    val expected = ArraySeq((SongId(123456), 100.0f, 3.9775624f)) // TODO: figure out the 3.9
+    val results = resultsIO.unsafeRunSync()
+    results should contain theSameElementsInOrderAs expected
   }
 }

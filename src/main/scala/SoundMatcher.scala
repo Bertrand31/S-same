@@ -7,7 +7,7 @@ import sesame.storage._, aerospike.AeroClient
 import sesame.types.{SongMatch, SongMetadata, SongId}
 import sesame.footprint.SoundFootprintGenerator
 
-object Sésame extends IOApp:
+object SoundMatcher extends IOApp:
 
   def findCorrespondingHashes(footprint: ArraySeq[Long])(
       using FootprintClient,

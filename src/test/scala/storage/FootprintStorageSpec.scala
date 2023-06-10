@@ -1,8 +1,6 @@
 package sesame
 
-import org.scalatest._
-import flatspec._
-import matchers._
+import org.scalatest._, flatspec._, matchers._
 
 import scala.collection.immutable.ArraySeq
 import cats.implicits._
@@ -11,7 +9,7 @@ import sesame.types.SongId
 import sesame.storage.FootprintBridge
 import sesame.storage.aerospike.AeroClient
 
-class StorageSpec extends AnyFlatSpec with should.Matchers with AerospikeDocker:
+class FootprintStorageSpec extends AnyFlatSpec with should.Matchers with AerospikeDocker:
 
   import cats.effect.unsafe.implicits.global
 
