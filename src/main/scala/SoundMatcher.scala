@@ -5,6 +5,7 @@ import cats.implicits._
 import cats.effect.{IO, IOApp, ExitCode}
 import sesame.storage._, aerospike.AeroClient
 import sesame.types.{SongMatch, SongMetadata, SongId, TimeOffset}
+import sesame.audio.MicRecorder
 import sesame.footprint.SoundFootprintGenerator
 
 object SoundMatcher extends IOApp:

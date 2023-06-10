@@ -25,7 +25,7 @@ Each song is assumed to be no longer than 600 seconds (10 minutes).
 ### Hashing
 
 We want to store each hash alongside its position within the song, as well as the ID of the song so we can retrieve it.
-Thus, the data stored for each hash making up a song's footprint will look like this: ``hash -> (position | songId)``. The pipe (`|`) is used here to represent a sum type.
+Thus, the data stored for each hash making up a song's footprint will look like this: ``hash -> (position | songId)``. The pipe (`|`) is used here to represent a product type.
 
 Each hash produced by the footprinting algorithm is 64 bits long.
 It has been empirically determined that, using the current encoding, each second of a song results in 21.5 hashes.

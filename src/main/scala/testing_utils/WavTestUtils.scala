@@ -3,6 +3,7 @@ package sesame.utils
 import java.io._
 import javax.sound.sampled._
 import cats.effect.IO
+import sesame.audio.MicRecorder
 import sesame.audio.AudioCommons.InputFormat
 
 object WavUtils:
@@ -14,3 +15,7 @@ object WavUtils:
       val file = new File("lastRecording.wav")
       AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, file)
     }
+
+  def listenAndWriteToDisk(): IO[Unit] =
+    MicRecorder.recordChunks.map(_.flatten.toArray).flatMap(writeToFile)
+
