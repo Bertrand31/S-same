@@ -29,7 +29,7 @@ Thus, the data stored for each hash making up a song's footprint will look like 
 
 Each hash produced by the footprinting algorithm is 64 bits long.
 
-Furthermore, given the encoding used, every second of a second weights `44100 samples * 2 bytes * 1 channel ≈ 88 kB`.
+Furthermore, given the encoding used, every second of a song weights `44100 samples * 2 bytes * 1 channel ≈ 88 kB`.
 Since each chunk is 4 kilobytes long, it means every second will result in `88 / 4 = 22 hashes`.
 
 Given that songs are assumed to be 600 seconds long at most, the maximum number of hashes generated for a song is `600×22` which is `13200`.
