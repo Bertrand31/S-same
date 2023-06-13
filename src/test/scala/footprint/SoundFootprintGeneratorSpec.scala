@@ -9,8 +9,7 @@ import sesame.footprint.SoundFootprintGenerator
 import sesame.storage.FootprintBridge
 import sesame.storage.aerospike.AeroClient
 
-class SoundFootprintGeneratorSpec extends AnyFlatSpec with AerospikeDocker {
-  self: Suite =>
+class SoundFootprintGeneratorSpec extends AnyFlatSpec with AerospikeDocker { self: Suite =>
 
   import cats.effect.unsafe.implicits.global
 
@@ -38,10 +37,9 @@ class SoundFootprintGeneratorSpec extends AnyFlatSpec with AerospikeDocker {
 
     groupedCorr.map(_._1) should contain theSameElementsAs List(SongId(123456))
 
-    // Linearity not matching at 100% because of hash collisions
+    // Linearity not matching at 100% because of the fuzz factor and hash collisions
     rankedMatches match
-      case ArraySeq((SongId(123456), 100f, linearity)) =>
-        linearity should be > (99f)
+      case ArraySeq((SongId(123456), 100f, linearity)) => linearity should be > (99f)
       case result => throw new Exception(s"Incorrect match: $result")
 
   }

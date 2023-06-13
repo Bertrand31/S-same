@@ -2,7 +2,7 @@
 
 This is a fun little side project I started working on because I've always found ⫙µ$ї¢ 𐅾℮∁օ₲∏⫯էℹ︎օη services to be cool. Don't sue please 😬
 
-While I've been using this service with only a handful of songs I have handy, I've tried to make all design decisions assuming this service was going to be used by a large company which would have massive music catalogue (Spotify).
+While I've been using this service with only a handful of songs I have handy, I've tried to make all design decisions assuming this service was going to be used by a large company which would have a massive music catalogue (Spotify).
 
 ## (Very) brief overview of the algorithm
 
@@ -28,10 +28,12 @@ We want to store each hash alongside its position within the song, as well as th
 Thus, the data stored for each hash making up a song's footprint will look like this: ``hash -> (position | songId)``. The pipe (`|`) is used here to represent a product type.
 
 Each hash produced by the footprinting algorithm is 64 bits long.
-It has been empirically determined that, using the current encoding, each second of a song results in 21.5 hashes.
 
-Given that songs are assumed to be 600 seconds long at most, the maximum number of hashes generated for a song is `600×21.5` which is `12900`.
-Since we want to store each hash with its position within the relevant song, it appears that we need `(log₂12900) + 1`, 15 bits to store that "position".
+Furthermore, given the encoding used, every second of a song weights `44100 samples * 2 bytes * 1 channel ≈ 88 kB`.
+Since each chunk is 4 kilobytes long, it means every second will result in `88 / 4 = 22 hashes`.
+
+Given that songs are assumed to be 600 seconds long at most, the maximum number of hashes generated for a song is `600×22` which is `13200`.
+Since we want to store each hash with its position within the relevant song, it appears that we need `(log₂13200) + 1`, 15 bits to store that "position".
 
 Furthermore, if we want to futureproof our solution and account for the possibility of storing 200 million songs in the future, we need song IDs to be `log₂(2×10⁸) + 1`, 29 bits long.
 
@@ -45,12 +47,12 @@ This means each key/value pair will weight 108 bits, or 14 bytes.
 
 An average song will thus weight the following:
 
-    14  ×  21.5  ×  197
+    14  ×  22   ×   197
      |      |        |
     k/v  hashes/s  avg. song length
 
-This means that, without accounting for datastore-specific overhead, an average song will require 59297 bytes.
-That means a total dataset size of `8×10⁷×59297` which gives us ~4.7 TB.
+This means that, without accounting for datastore-specific overhead, an average song will require 60676 bytes.
+That means a total dataset size of `8×10⁷×60676` which gives us ~4.85 TB.
 
 This could be optimized further by only using the necessary bits for both position indexes and song IDs, but there is not point in getting too far down this rabbit hole before having figured out the exact storage details (which may involve compression).
 
