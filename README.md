@@ -73,7 +73,7 @@ However, while this data is crucial for us to be able to operate, it is easily r
 #### How metadata is stored
 
 We will assume all input audio files have adequate metadata attached, with at least a `TITLE` and an `ARTIST` attributes.
-Upon ingestion, files' metadata is stored in dedicated namespace (Aerospike's name for a database) `metadata`.
+Upon ingestion, the files metadata is stored in a dedicated namespace (Aerospike's name for a database) `metadata`.
 
 Inside this namespace is a set (Aerospike's name for a table), also called `metadata`. Each record (row) is made up of a key, which is the song ID, and bins (columns). Those bins' names are not predetermined, we simply extract all of the file's metadata and store it as is. Some level of normalization will have to be introduced in the future.
 
@@ -98,4 +98,4 @@ It is then highly unlikely for it to become a bottleneck. And even if it somehow
 
 ## Aerospike cheatsheet
 
-    docker run -v /home/bertrand/Code/sésame/aerospike_conf:/opt/aerospike/etc/ -p 3000-3002:3000-3002 aerospike:ce-6.3.0.4_1 --config-file /opt/aerospike/etc/aerospike.conf  --early-verbose
+    docker run -v ./aerospike_conf:/opt/aerospike/etc/ -p 3000-3002:3000-3002 aerospike:ce-6.3.0.4_1 --config-file /opt/aerospike/etc/aerospike.conf  --early-verbose
