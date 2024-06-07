@@ -2,7 +2,7 @@
 
 This is a fun little side project I started working on because I've always found ⫙µ$ї¢ 𐅾℮∁օ₲∏⫯էℹ︎օη services to be cool. Don't sue please 😬
 
-While I've been using this service with only a handful of songs I have handy, I've tried to make all design decisions assuming this service was going to be used by a large company which would have a massive music catalogue (Spotify).
+While I've been using this service with only a handful of songs I had on my laptop, I've tried to make all design decisions assuming this service was going to be used by a large company which would have a massive music catalogue (Spotify).
 
 ## (Very) brief overview of the algorithm
 
